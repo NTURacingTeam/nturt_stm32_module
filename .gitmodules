@@ -1,0 +1,18 @@
+[submodule "lib/nturt_can_config"]
+	path = lib/nturt_can_config
+	url = https://github.com/NTURacingTeam/nturt_can_config.git
+[submodule "lib/googletest"]
+	path = lib/googletest
+	url = https://github.com/google/googletest.git
+[submodule "lib/C-Mock"]
+	path = lib/C-Mock
+	url = https://github.com/hjagodzinski/C-Mock.git
+[submodule "lib/FreeRTOS-Kernel"]
+	path = lib/FreeRTOS-Kernel
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "lib/STM32CubeH7"]
+	path = lib/STM32CubeH7
+	url = https://github.com/STMicroelectronics/STM32CubeH7.git
+[submodule "lib/STM32CubeG4"]
+	path = lib/STM32CubeG4
+	url = https://github.com/STMicroelectronics/STM32CubeG4.git
