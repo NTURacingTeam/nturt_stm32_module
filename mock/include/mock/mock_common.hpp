@@ -2,38 +2,30 @@
 #define MOCK_COMMON_HPP
 
 // stl include
+#include <atomic>
 #include <condition_variable>
 #include <cstdint>
-#include <functional>
-#include <list>
-#include <memory>
 #include <mutex>
 #include <thread>
 
-// gtest include
-#include "cmock/cmock.h"
-
+extern "C" {
 // freertos include
 #include "FreeRTOS.h"
 #include "task.h"
 
 // stm32_module include
 #include "stm32_module/module_common.h"
+}
+
+// gtest include
+#include "cmock/cmock.h"
+#include "gtest/gtest.h"
 
 /* type ----------------------------------------------------------------------*/
 enum class FreertosSimulatorMode {
   COUNT_DOWN,
   CONTINUOUS,
 };
-
-/* macro ---------------------------------------------------------------------*/
-#define SIMULATE_FREERTOS_CALL_ONCE(obj, handler, call) \
-  EXPECT_CALL(obj, call).WillOnce(                      \
-      ::testing::Invoke(&handler, &FreertosSimulator::call))
-
-#define SIMULATE_FREERTOS_CALL(obj, handler, call) \
-  EXPECT_CALL(obj, call).WillRepeatedly(           \
-      ::testing::Invoke(&handler, &FreertosSimulator::call))
 
 /* mock ----------------------------------------------------------------------*/
 /// @brief Class for mocking common function using google test framework.
@@ -43,12 +35,21 @@ class CommonMock : public CMockMocker<CommonMock> {
 
   ~CommonMock();
 
-  // CMOCK_MOCK_METHOD(void, __module_assert_fail,
-  //                   (const char *, const char *, unsigned int, const char
-  //                   *));
+  CMOCK_MOCK_METHOD(void, __module_assert_fail,
+                    (const char *, const char *, unsigned int, const char *));
 };
 
 namespace mock {
+
+/**
+ * @brief Convenient function for running freertos based tests. Initializes
+ * google test and runs the tests.
+ *
+ * @param argc Pointer to argc from main.
+ * @param argv Pointer to argv from main.
+ * @return int Return code from running gtest RUN_ALL_TESTS().
+ */
+int run_freertos_test(int *argc, char **argv);
 
 /* notification --------------------------------------------------------------*/
 class Notification {

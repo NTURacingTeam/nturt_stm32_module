@@ -1,8 +1,8 @@
 // stl include
 #include <algorithm>
-#include <functional>
 #include <future>
 
+extern "C" {
 // freertos include
 #include "FreeRTOS.h"
 
@@ -13,14 +13,16 @@
 #include "stm32h7xx_hal.h"
 #endif
 
-// gtest include
-#include "gtest/gtest.h"
-
 // stm32_module include
 #include "stm32_module/led_controller.h"
 #include "stm32_module/module_common.h"
+}
+
+// gtest include
+#include "gtest/gtest.h"
 
 // mock include
+#include "mock/freertos_mock.hpp"
 #include "mock/hal_gpio_mock.hpp"
 #include "mock/mock_common.hpp"
 
@@ -69,11 +71,15 @@ class LedControllerStartTest : public Test {
   LedController led_controller_;
 
   LedControlBlock led_control_block_[NUM_LED];
+
+  HAL_GPIOMock gpio_mock_;
+
+  FreertosMock freertos_mock_;
 };
 
 TEST_F(LedControllerStartTest, TurnOnOffBlinkWileNotStarted) {
-  HAL_GPIO_Mock gpio_mock;
-  EXPECT_CALL(gpio_mock, HAL_GPIO_WritePin).Times(0);
+  EXPECT_CALL(gpio_mock_, HAL_GPIO_WritePin).Times(0);
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(0);
 
   EXPECT_EQ(LedController_turn_on(&led_controller_, 0), MODULE_ERROR);
   EXPECT_EQ(LedController_turn_off(&led_controller_, 0), MODULE_ERROR);
@@ -81,11 +87,15 @@ TEST_F(LedControllerStartTest, TurnOnOffBlinkWileNotStarted) {
 }
 
 TEST_F(LedControllerStartTest, PartiallyInitializedLed) {
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(0);
+
   LedController_init_led(&led_controller_, 0, num_to_gpio_port[0], 0);
   EXPECT_EQ(LedController_start(&led_controller_), MODULE_ERROR);
 }
 
 TEST_F(LedControllerStartTest, FullyInitializedLed) {
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
+
   for (int i = 0; i < NUM_LED; i++) {
     LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
   }
@@ -93,14 +103,10 @@ TEST_F(LedControllerStartTest, FullyInitializedLed) {
   EXPECT_EQ(led_controller_.super_.state_, TASK_RUNNING);
 }
 
-#if 0
-
 /* led controller on off test ------------------------------------------------*/
 class LedControllerOnOffTest : public Test {
  protected:
   void SetUp() override {
-    EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
-
     LedController_ctor(&led_controller_, NUM_LED, led_control_block_);
     for (int i = 0; i < NUM_LED; i++) {
       LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
@@ -108,13 +114,13 @@ class LedControllerOnOffTest : public Test {
     LedController_start(&led_controller_);
   }
 
-  HAL_GPIO_Mock gpio_mock_;
-
-  FreeRTOS_Mock freertos_mock_;
+  void TearDown() override { vTaskDelete(led_controller_.super_.task_handle_); }
 
   LedController led_controller_;
 
   LedControlBlock led_control_block_[NUM_LED];
+
+  HAL_GPIOMock gpio_mock_;
 };
 
 TEST_F(LedControllerOnOffTest, TurnOnLed) {
@@ -157,6 +163,7 @@ TEST_F(LedControllerOnOffTest, TurnOffLed) {
   for (int i = 0; i < NUM_LED; i++) {
     EXPECT_EQ(LedController_turn_on(&led_controller_, i), MODULE_OK);
   }
+
   for (int i = 0; i < NUM_LED; i++) {
     EXPECT_EQ(LedController_turn_off(&led_controller_, i), MODULE_OK);
   }
@@ -207,33 +214,20 @@ TEST_F(LedControllerOnOffTest, RepetedlyTurnOnAndOffLed) {
 class LedControllerBlinkTest : public Test {
  protected:
   void SetUp() override {
-    SIMULATE_FREERTOS_CALL_ONCE(freertos_mock_, freertos_simulator_,
-                                xTaskCreateStatic);
-    SIMULATE_FREERTOS_CALL(freertos_mock_, freertos_simulator_,
-                           xTaskGetTickCount);
-    SIMULATE_FREERTOS_CALL(freertos_mock_, freertos_simulator_,
-                           xTaskDelayUntil);
-
     LedController_ctor(&led_controller_, NUM_LED, led_control_block_);
     for (int i = 0; i < NUM_LED; i++) {
       LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
     }
     LedController_start(&led_controller_);
-
-    freertos_simulator_.start();
   }
 
-  void TearDown() override { freertos_simulator_.stop(); }
-
-  HAL_GPIO_Mock gpio_mock_;
-
-  FreeRTOS_Mock freertos_mock_;
-
-  FreertosSimulator freertos_simulator_;
+  void TearDown() override { vTaskDelete(led_controller_.super_.task_handle_); }
 
   LedController led_controller_;
 
   LedControlBlock led_control_block_[NUM_LED];
+
+  HAL_GPIOMock gpio_mock_;
 };
 
 TEST_F(LedControllerBlinkTest, BlinkLed) {
@@ -250,14 +244,11 @@ TEST_F(LedControllerBlinkTest, BlinkLed) {
     for (int i = 0; i < NUM_LED; i++) {
       EXPECT_CALL(gpio_mock_,
                   HAL_GPIO_WritePin(num_to_gpio_port[i], i, GPIO_PIN_SET))
-          .WillOnce([&, i] {
-            set_promise[i].set_value(freertos_simulator_.xTaskGetTickCount());
-          });
+          .WillOnce([&, i] { set_promise[i].set_value(xTaskGetTickCount()); });
       EXPECT_CALL(gpio_mock_,
                   HAL_GPIO_WritePin(num_to_gpio_port[i], i, GPIO_PIN_RESET))
-          .WillOnce([&, i] {
-            reset_promise[i].set_value(freertos_simulator_.xTaskGetTickCount());
-          });
+          .WillOnce(
+              [&, i] { reset_promise[i].set_value(xTaskGetTickCount()); });
     }
   }
   for (int i = 0; i < NUM_LED; i++) {
@@ -285,14 +276,11 @@ TEST_F(LedControllerBlinkTest, RepeatedlyBlinkLed) {
     for (int i = 0; i < REPEATED_TEST_TIMES; i++) {
       EXPECT_CALL(gpio_mock_,
                   HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
-          .WillOnce([&, i] {
-            set_promise[i].set_value(freertos_simulator_.xTaskGetTickCount());
-          });
+          .WillOnce([&, i] { set_promise[i].set_value(xTaskGetTickCount()); });
       EXPECT_CALL(gpio_mock_,
                   HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_RESET))
-          .WillOnce([&, i] {
-            reset_promise[i].set_value(freertos_simulator_.xTaskGetTickCount());
-          });
+          .WillOnce(
+              [&, i] { reset_promise[i].set_value(xTaskGetTickCount()); });
     }
   }
 
@@ -321,15 +309,11 @@ TEST_F(LedControllerBlinkTest, ConcurrentlyBlinkLed) {
     EXPECT_CALL(gpio_mock_,
                 HAL_GPIO_WritePin(num_to_gpio_port[i], i, GPIO_PIN_SET))
         .InSequence(seq[i])
-        .WillOnce([&, i] {
-          set_promise[i].set_value(freertos_simulator_.xTaskGetTickCount());
-        });
+        .WillOnce([&, i] { set_promise[i].set_value(xTaskGetTickCount()); });
     EXPECT_CALL(gpio_mock_,
                 HAL_GPIO_WritePin(num_to_gpio_port[i], i, GPIO_PIN_RESET))
         .InSequence(seq[i])
-        .WillOnce([&, i] {
-          reset_promise[i].set_value(freertos_simulator_.xTaskGetTickCount());
-        });
+        .WillOnce([&, i] { reset_promise[i].set_value(xTaskGetTickCount()); });
   }
 
   for (int i = 0; i < NUM_LED; i++) {
@@ -342,6 +326,7 @@ TEST_F(LedControllerBlinkTest, ConcurrentlyBlinkLed) {
     reset_tick[i] = reset_future[i].get();
   }
 
+  // check if all led are turned and off at the same time
   auto set_tick_minmax = std::minmax_element(set_tick, set_tick + NUM_LED);
   auto reset_tick_minmax =
       std::minmax_element(reset_tick, reset_tick + NUM_LED);
@@ -361,7 +346,7 @@ TEST_F(LedControllerBlinkTest, BlinkLedWhileOn) {
   EXPECT_EQ(LedController_blink(&led_controller_, 0, 100), MODULE_BUSY);
 
   // wait some time to check if the led is ever turned off
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  vTaskDelay(5);
 }
 
 TEST_F(LedControllerBlinkTest, TurnOnLedWhileBlinking) {
@@ -376,7 +361,7 @@ TEST_F(LedControllerBlinkTest, TurnOnLedWhileBlinking) {
   LedController_turn_on(&led_controller_, 0);
 
   // wait some time to check if the led is ever turned off
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  vTaskDelay(5);
 }
 
 TEST_F(LedControllerBlinkTest, TurnOffLedWhileBlinking) {
@@ -386,14 +371,10 @@ TEST_F(LedControllerBlinkTest, TurnOffLedWhileBlinking) {
 
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
-      .WillOnce([&] {
-        set_promise.set_value(freertos_simulator_.xTaskGetTickCount());
-      });
+      .WillOnce([&] { set_promise.set_value(xTaskGetTickCount()); });
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_RESET))
-      .WillOnce([&] {
-        reset_promise.set_value(freertos_simulator_.xTaskGetTickCount());
-      });
+      .WillOnce([&] { reset_promise.set_value(xTaskGetTickCount()); });
 
   LedController_blink(&led_controller_, 0, 100);
   LedController_turn_off(&led_controller_, 0);
@@ -401,4 +382,4 @@ TEST_F(LedControllerBlinkTest, TurnOffLedWhileBlinking) {
   EXPECT_LE(reset_future.get() - set_future.get(), 10);
 }
 
-#endif
+int main(int argc, char** argv) { return mock::run_freertos_test(&argc, argv); }

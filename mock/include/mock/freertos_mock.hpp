@@ -1,12 +1,13 @@
 #ifndef FREERTOS_MOCK_HPP
 #define FREERTOS_MOCK_HPP
 
-// glibc include
-#include <stdint.h>
+// stl include
+#include <cstdint>
 
 // gtest include
 #include "cmock/cmock.h"
 
+extern "C" {
 // freertos include
 #include "FreeRTOS.h"
 #include "event_groups.h"
@@ -14,16 +15,18 @@
 #include "semphr.h"
 #include "task.h"
 #include "timers.h"
+}
 
 /// @brief Class for mocking freertos function using google test framework.
-class FreeRTOS_Mock : public CMockMocker<FreeRTOS_Mock> {
+class FreertosMock : public CMockMocker<FreertosMock> {
  public:
-  FreeRTOS_Mock();
+  FreertosMock();
 
-  ~FreeRTOS_Mock();
+  ~FreertosMock();
 
-  /* port functions
-   * -----------------------------------------------------------*/
+#if 0
+
+  /* port functions ----------------------------------------------------------*/
   CMOCK_MOCK_METHOD(void, vPortYield, ());
 
   CMOCK_MOCK_METHOD(portBASE_TYPE, xPortSetInterruptMask, ());
@@ -46,6 +49,8 @@ class FreeRTOS_Mock : public CMockMocker<FreeRTOS_Mock> {
   CMOCK_MOCK_METHOD(BaseType_t, xTaskResumeAll, ());
 
   CMOCK_MOCK_METHOD(TickType_t, xTaskGetTickCount, ());
+
+#endif
 
   /* task management functions -----------------------------------------------*/
   CMOCK_MOCK_METHOD(BaseType_t, xTaskCreate,
@@ -76,11 +81,12 @@ class FreeRTOS_Mock : public CMockMocker<FreeRTOS_Mock> {
                      BaseType_t* const, const TickType_t));
 
   /* task nofity functions ---------------------------------------------------*/
-  CMOCK_MOCK_METHOD(BaseType_t, xTaskNotify,
-                    (TaskHandle_t, uint32_t, eNotifyAction));
+  CMOCK_MOCK_METHOD(BaseType_t, xTaskGenericNotify,
+                    (TaskHandle_t, uint32_t, eNotifyAction, uint32_t*));
 
-  CMOCK_MOCK_METHOD(BaseType_t, xTaskNotifyFromISR,
-                    (TaskHandle_t, uint32_t, eNotifyAction, BaseType_t*));
+  CMOCK_MOCK_METHOD(BaseType_t, xTaskGenericNotifyFromISR,
+                    (TaskHandle_t, uint32_t, eNotifyAction, uint32_t*,
+                     BaseType_t*));
 
   CMOCK_MOCK_METHOD(BaseType_t, xTaskNotifyWait,
                     (UBaseType_t, uint32_t, uint32_t*, TickType_t));
@@ -101,13 +107,11 @@ class FreeRTOS_Mock : public CMockMocker<FreeRTOS_Mock> {
                      TickType_t));
 
   /* semaphore management functions ------------------------------------------*/
-  CMOCK_MOCK_METHOD(SemaphoreHandle_t, xSemaphoreCreateMutexStatic,
-                    (StaticSemaphore_t*));
+  CMOCK_MOCK_METHOD(QueueHandle_t, xQueueCreateMutexStatic,
+                    (const uint8_t, StaticQueue_t*));
 
-  CMOCK_MOCK_METHOD(BaseType_t, xSemaphoreTake,
-                    (SemaphoreHandle_t, TickType_t));
-
-  CMOCK_MOCK_METHOD(BaseType_t, xSemaphoreGive, (SemaphoreHandle_t));
+  CMOCK_MOCK_METHOD(BaseType_t, xQueueSemaphoreTake,
+                    (QueueHandle_t, TickType_t));
 
   /* queue management functions ----------------------------------------------*/
   CMOCK_MOCK_METHOD(BaseType_t, xQueueGenericSend,

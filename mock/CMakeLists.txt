@@ -4,7 +4,7 @@
 # library: mock
 add_library(mock
     src/cmsis_os2_mock.cpp
-    # src/freertos_mock.cpp
+    src/freertos_mock.cpp
     src/hal_can_mock.cpp
     src/hal_gpio_mock.cpp
     src/mock_common.cpp

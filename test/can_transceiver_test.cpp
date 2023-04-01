@@ -1,5 +1,4 @@
-// stl include
-
+extern "C" {
 // stm32 include
 #if defined(STM32G431xx)
 #include "stm32g4xx_hal.h"
@@ -7,14 +6,16 @@
 #include "stm32h7xx_hal.h"
 #endif
 
-// gtest include
-#include "gtest/gtest.h"
-
 // stm32_module include
 #include "stm32_module/can_transceiver.h"
 #include "stm32_module/module_common.h"
+}
+
+// gtest include
+#include "gtest/gtest.h"
 
 // mock include
+#include "mock/freertos_mock.hpp"
 #include "mock/hal_can_mock.hpp"
 #include "mock/mock_common.hpp"
 
@@ -39,9 +40,13 @@ class CanTransceiverStartTest : public Test {
   CanTransceiver can_transceiver_;
 
   FDCAN_HandleTypeDef fdcan_handle_;
+
+  FreertosMock freertos_mock_;
 };
 
 TEST_F(CanTransceiverStartTest, CanTransceiverStart) {
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
+
   EXPECT_EQ(CanTransceiver_start(&can_transceiver_), MODULE_OK);
   EXPECT_EQ(can_transceiver_.super_.state_, TASK_RUNNING);
 }

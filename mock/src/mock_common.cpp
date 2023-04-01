@@ -3,28 +3,48 @@
 // stl include
 #include <chrono>
 #include <condition_variable>
-#include <functional>
 #include <mutex>
-#include <stdexcept>
 #include <thread>
 
+extern "C" {
 // freertos include
 #include "FreeRTOS.h"
 #include "task.h"
 
 // nturt include
 #include "stm32_module/module_common.h"
+}
+
+// google test include
+#include "gtest/gtest.h"
 
 /* mock ----------------------------------------------------------------------*/
 CommonMock::CommonMock() {}
 
 CommonMock::~CommonMock() {}
 
-// CMOCK_MOCK_FUNCTION(CommonMock, void, __module_assert_fail,
-//                     (const char *, const char *, unsigned int, const char
-//                     *));
+CMOCK_MOCK_FUNCTION(CommonMock, void, __module_assert_fail,
+                    (const char *, const char *, unsigned int, const char *));
 
 namespace mock {
+
+static void googletest_task(void *pvParameters) {
+  int *test_result = (int *)pvParameters;
+
+  *test_result = RUN_ALL_TESTS();
+  vTaskEndScheduler();
+}
+
+int run_freertos_test(int *argc, char **argv) {
+  ::testing::InitGoogleTest(argc, argv);
+
+  int test_result;
+  xTaskCreate(googletest_task, "googletest_task", PTHREAD_STACK_MIN,
+              &test_result, 1, NULL);
+  vTaskStartScheduler();
+
+  return test_result;
+}
 
 /* notification --------------------------------------------------------------*/
 void Notification::wait() {
@@ -49,8 +69,9 @@ void Notification::notify_all() {
   cv_.notify_all();
 }
 
-/* freertos simulator --------------------------------------------------------*/
 #if 0
+
+/* freertos simulator --------------------------------------------------------*/
 
 FreertosSimulator::FreertosSimulator() {}
 

@@ -2,25 +2,27 @@
 #define HAL_GPIO_MOCK_HPP
 
 // glibc include
-#include <stdint.h>
+#include <cstdint>
 
-// gtest include
-#include "cmock/cmock.h"
-
+extern "C" {
 // stm32 include
 #if defined(STM32G431xx)
 #include "stm32g4xx_hal.h"
 #elif defined(STM32H723xx)
 #include "stm32h7xx_hal.h"
 #endif
+}
+
+// gtest include
+#include "cmock/cmock.h"
 
 /// @brief Class for mocking stm32 HAL_GPIO function using google test
 /// framework.
-class HAL_GPIO_Mock : public CMockMocker<HAL_GPIO_Mock> {
+class HAL_GPIOMock : public CMockMocker<HAL_GPIOMock> {
  public:
-  HAL_GPIO_Mock();
+  HAL_GPIOMock();
 
-  virtual ~HAL_GPIO_Mock();
+  virtual ~HAL_GPIOMock();
 
   CMOCK_MOCK_METHOD(GPIO_PinState, HAL_GPIO_ReadPin,
                     (GPIO_TypeDef *, uint16_t));

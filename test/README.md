@@ -10,7 +10,21 @@ Note: Assertion of function parameter checking is not tested.
 
 ### can_transceiver
 
+- CanTransceiverInitTest
+  - CanTransceiverCtor
+- CanTransceiverStartTest
+  - CanTransceiverStart
+
 ### error_handler
+
+- ErrorHandlerInitTest
+  - ErrorHandlerCtor
+- ErrorHandlerStartTest
+  - AccessErrorWhileNotStarted
+  - ErrorHandlerStart
+- ErrorHandlerAccessErrorTest
+  - ErrorHandlerWriteError
+  - ErrorHandlerGetErrorTest
 
 ### led_controller
 
@@ -40,8 +54,9 @@ Note: Assertion of function parameter checking is not tested.
 
 For those how writing new test for stm32 module, please note:
 
+- Since we are using gcc and g++ multilib to compile the test, remember to choose the correct version of gcc/g++ that match the version of your installed multilib. The default one should do the job.
+- Weirdly enought, only `semphr.h` in freertos kernel dose not have `extern "C"` guard like any other header files do. So extra `extern "C"` guard is added for every c header files included in mock and test for extra precaution.
 - For some reason, the test cannot properly link to google test library if a test with test fixture is not defined, for example:
-
   ```cpp
   class FooStartTest : public ::testing::Test {
   protected:
@@ -61,4 +76,4 @@ For those how writing new test for stm32 module, please note:
     EXPECT_EQ(foo_.super_.state_, TASK_RUNNING);
   }
   ```
-- Weirdly enought, only `semphr.h` in freertos kernel dose not have `extern "C"` guard like any other header files do. So it's manually added in order to test in c++ environment.
+  UPDATE: May not be a thing anymore.

@@ -26,6 +26,7 @@ inline ModuleRet Task_start(Task *const self) {
 // pure virtual function for Task base class
 ModuleRet __Task_start(Task *const self) {
   (void)self;
+
   module_assert(0);
 }
 

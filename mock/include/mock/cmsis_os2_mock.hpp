@@ -1,21 +1,23 @@
 #ifndef CMSIS_OS2_MOCK_HPP
 #define CMSIS_OS2_MOCK_HPP
 
-// glibc include
-#include <stdint.h>
+// stl include
+#include <cstdint>
+
+extern "C" {
+// stm32 incldue
+#include "cmsis_os2.h"
+}
 
 // gtest include
 #include "cmock/cmock.h"
 
-// stm32 incldue
-#include "cmsis_os2.h"
-
 /// @brief Class for mocking cmsis rtos v2 function using google test framework.
-class CMSIS_OS2_Mock : public CMockMocker<CMSIS_OS2_Mock> {
+class CMSIS_OS2Mock : public CMockMocker<CMSIS_OS2Mock> {
  public:
-  CMSIS_OS2_Mock();
+  CMSIS_OS2Mock();
 
-  ~CMSIS_OS2_Mock();
+  ~CMSIS_OS2Mock();
 
   /* kernel menagenent functions ---------------------------------------------*/
   CMOCK_MOCK_METHOD(uint32_t, osKernelGetTickCount, ());

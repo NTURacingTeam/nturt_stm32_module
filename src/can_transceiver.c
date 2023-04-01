@@ -142,6 +142,7 @@ void CanTransceiver_ctor(CanTransceiver* const self,
 
   // assign base virtual function
   static struct CanTransceiverVtbl vtbl_base = {
+      .configure = __CanTransceiver_configure,
       .receive = __CanTransceiver_receive,
       .receive_hp = __CanTransceiver_receive_hp,
       .periodic_update = __CanTransceiver_periodic_update,

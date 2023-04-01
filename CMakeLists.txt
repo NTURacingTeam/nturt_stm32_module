@@ -12,7 +12,6 @@ set(CMAKE_BUILD_TYPE Debug)
 # compiling in 64-bit will result in compilation error
 add_compile_options(-m32)
 add_link_options(-m32)
-set(CMAKE_SHARED_LINKER_FLAGS -m32)
 
 # build for testing
 add_compile_definitions(TESTING)
@@ -37,7 +36,8 @@ add_subdirectory(mock)
 # build
 ################################################################################
 # library: stm32_module
-add_library(stm32_module
+# build as a dynamic library for c-mock to mock out at link time
+add_library(stm32_module SHARED
     src/can_transceiver.c
     src/error_handler.c
     src/led_controller.c

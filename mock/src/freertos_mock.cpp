@@ -1,8 +1,6 @@
 #include "mock/freertos_mock.hpp"
 
-// gtest include
-#include "cmock/cmock.h"
-
+extern "C" {
 // freertos include
 #include "FreeRTOS.h"
 #include "event_groups.h"
@@ -10,106 +8,110 @@
 #include "semphr.h"
 #include "task.h"
 #include "timers.h"
+}
 
-FreeRTOS_Mock::FreeRTOS_Mock() {}
+// gtest include
+#include "cmock/cmock.h"
 
-FreeRTOS_Mock::~FreeRTOS_Mock() {}
+FreertosMock::FreertosMock() {}
 
-/* port functions -----------------------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vPortYield, ());
+FreertosMock::~FreertosMock() {}
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, portBASE_TYPE, xPortSetInterruptMask, ());
+#if 0
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vPortClearInterruptMask,
+/* port functions ------------------------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vPortYield, ());
+
+CMOCK_MOCK_FUNCTION(FreertosMock, portBASE_TYPE, xPortSetInterruptMask, ());
+
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vPortClearInterruptMask,
                     (portBASE_TYPE));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vPortDisableInterrupts, ());
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vPortDisableInterrupts, ());
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vPortEnableInterrupts, ());
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vPortEnableInterrupts, ());
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vTaskEnterCritical, ());
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vTaskEnterCritical, ());
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vTaskExitCritical, ());
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vTaskExitCritical, ());
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xPortIsInsideInterrupt, ());
+/* schedular management functions --------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vTaskSuspendAll, ());
 
-/* schedular management functions -------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vTaskSuspendAll, ());
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTaskResumeAll, ());
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTaskResumeAll, ());
+CMOCK_MOCK_FUNCTION(FreertosMock, TickType_t, xTaskGetTickCount, ());
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, TickType_t, xTaskGetTickCount, ());
+#endif
 
-/* task management functions ------------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTaskCreate,
+/* task management functions -------------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTaskCreate,
                     (TaskFunction_t, const char* const,
                      const configSTACK_DEPTH_TYPE, void* const, UBaseType_t,
                      TaskHandle_t* const));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, TaskHandle_t, xTaskCreateStatic,
+CMOCK_MOCK_FUNCTION(FreertosMock, TaskHandle_t, xTaskCreateStatic,
                     (TaskFunction_t, const char* const, const uint32_t,
                      void* const, UBaseType_t, StackType_t* const,
                      StaticTask_t* const));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vTaskDelay, (const TickType_t));
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vTaskDelay, (const TickType_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTaskDelayUntil,
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTaskDelayUntil,
                     (TickType_t* const, const TickType_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vTaskSuspend, (TaskHandle_t));
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vTaskSuspend, (TaskHandle_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, void, vTaskResume, (TaskHandle_t));
+CMOCK_MOCK_FUNCTION(FreertosMock, void, vTaskResume, (TaskHandle_t));
 
-/* timer management functions -----------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTimerPendFunctionCallFromISR,
+/* timer management functions ------------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTimerPendFunctionCallFromISR,
                     (PendedFunction_t, void*, uint32_t, BaseType_t*));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTimerGenericCommand,
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTimerGenericCommand,
                     (TimerHandle_t, const BaseType_t, const TickType_t,
                      BaseType_t* const, const TickType_t));
 
-/* task nofity functions ----------------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTaskNotify,
-                    (TaskHandle_t, uint32_t, eNotifyAction));
+/* task nofity functions -----------------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTaskGenericNotify,
+                    (TaskHandle_t, uint32_t, eNotifyAction, uint32_t*));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTaskNotifyFromISR,
-                    (TaskHandle_t, uint32_t, eNotifyAction, BaseType_t*));
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTaskGenericNotifyFromISR,
+                    (TaskHandle_t, uint32_t, eNotifyAction, uint32_t*,
+                     BaseType_t*));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xTaskNotifyWait,
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xTaskNotifyWait,
                     (UBaseType_t, uint32_t, uint32_t*, TickType_t));
 
-/* event groups management functions ----------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, EventBits_t, xEventGroupWaitBits,
+/* event groups management functions -----------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, EventBits_t, xEventGroupWaitBits,
                     (EventGroupHandle_t, const EventBits_t, const BaseType_t,
                      const BaseType_t, TickType_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, EventBits_t, xEventGroupClearBits,
+CMOCK_MOCK_FUNCTION(FreertosMock, EventBits_t, xEventGroupClearBits,
                     (EventGroupHandle_t, const EventBits_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, EventBits_t, xEventGroupSetBits,
+CMOCK_MOCK_FUNCTION(FreertosMock, EventBits_t, xEventGroupSetBits,
                     (EventGroupHandle_t, const EventBits_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, EventBits_t, xEventGroupSync,
+CMOCK_MOCK_FUNCTION(FreertosMock, EventBits_t, xEventGroupSync,
                     (EventGroupHandle_t, const EventBits_t, const EventBits_t,
                      TickType_t));
 
-/* semaphore management functions -------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, SemaphoreHandle_t,
-                    xSemaphoreCreateMutexStatic, (StaticSemaphore_t*));
+/* semaphore management functions --------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, QueueHandle_t, xQueueCreateMutexStatic,
+                    (const uint8_t, StaticQueue_t*));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xSemaphoreTake,
-                    (SemaphoreHandle_t, TickType_t));
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xQueueSemaphoreTake,
+                    (QueueHandle_t, TickType_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xSemaphoreGive,
-                    (SemaphoreHandle_t));
-
-/* queue management functions -----------------------------------------------*/
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xQueueGenericSend,
+/* queue management functions ------------------------------------------------*/
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xQueueGenericSend,
                     (QueueHandle_t, const void* const, TickType_t,
                      const BaseType_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xQueuePeek,
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xQueuePeek,
                     (QueueHandle_t, void* const, TickType_t));
 
-CMOCK_MOCK_FUNCTION(FreeRTOS_Mock, BaseType_t, xQueueReceive,
+CMOCK_MOCK_FUNCTION(FreertosMock, BaseType_t, xQueueReceive,
                     (QueueHandle_t, void* const, TickType_t));

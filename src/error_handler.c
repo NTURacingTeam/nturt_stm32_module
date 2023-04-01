@@ -85,7 +85,6 @@ uint32_t ErrorHandler_get_error(const ErrorHandler* const self) {
 
 void ErrorHandler_task_code(void* const _self) {
   ErrorHandler* const self = (ErrorHandler*)_self;
-  TickType_t last_wake = xTaskGetTickCount();
 
   while (1) {
     uint32_t error_code;
@@ -96,7 +95,5 @@ void ErrorHandler_task_code(void* const _self) {
     } else {
       self->error_code_ &= ~(error_code & ERROR_CODE_ALL);
     }
-
-    vTaskDelayUntil(&last_wake, 1);
   }
 }

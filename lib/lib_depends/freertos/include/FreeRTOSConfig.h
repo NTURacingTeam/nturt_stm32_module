@@ -44,9 +44,7 @@
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
-#define configCPU_CLOCK_HZ                      1000000
-#define configSYSTICK_CLOCK_HZ                  1000
-#define configTICK_RATE_HZ                      ( 1000 )
+#define configTICK_RATE_HZ                      ( 10000 ) // overclocking the tick rate, may result some incosistency between tests
 #define configMAX_PRIORITIES                    ( 56 )
 #define configMINIMAL_STACK_SIZE                ( ( unsigned short ) PTHREAD_STACK_MIN )
 #define configMAX_TASK_NAME_LEN                 ( 16 )
@@ -76,7 +74,7 @@
 #define configSTACK_ALLOCATION_FROM_SEPARATE_HEAP   0
 
 /* Hook function related definitions. */
-#define configUSE_IDLE_HOOK                     0
+#define configUSE_IDLE_HOOK                     1
 #define configUSE_TICK_HOOK                     0
 #define configCHECK_FOR_STACK_OVERFLOW          0
 #define configUSE_MALLOC_FAILED_HOOK            0
@@ -126,7 +124,10 @@
 #define INCLUDE_xTaskGetHandle                  1
 #define INCLUDE_xTaskResumeFromISR              1
 
+/* FreeRTOS functions not implemented in the posix port. */
 // most port provides such function, but not for posix port
 int xPortIsInsideInterrupt();
+
+void vApplicationIdleHook();
 
 #endif /* FREERTOS_CONFIG_H */

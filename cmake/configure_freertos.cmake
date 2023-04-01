@@ -11,7 +11,8 @@ set(FREERTOS_DEPENDENCY_PATH ${PROJECT_SOURCE_DIR}/lib/lib_depends/freertos)
 ################################################################################
 # build
 ################################################################################
-add_library(freertos_kernel
+# build as a dynamic library for c-mock to mock out at link time
+add_library(freertos_kernel SHARED
     ${FREERTOS_KERNEL_PATH}/croutine.c
     ${FREERTOS_KERNEL_PATH}/event_groups.c
     ${FREERTOS_KERNEL_PATH}/list.c

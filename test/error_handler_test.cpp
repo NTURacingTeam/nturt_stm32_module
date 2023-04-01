@@ -1,17 +1,17 @@
-// stl include
-#include <functional>
-
+extern "C" {
 // freertos include
 #include "FreeRTOS.h"
-
-// gtest include
-#include "gtest/gtest.h"
 
 // stm32_module include
 #include "stm32_module/error_handler.h"
 #include "stm32_module/module_common.h"
+}
+
+// gtest include
+#include "gtest/gtest.h"
 
 // mock include
+#include "mock/freertos_mock.hpp"
 #include "mock/mock_common.hpp"
 
 using ::testing::Return;
@@ -32,6 +32,8 @@ class ErrorHandlerStartTest : public Test {
   void SetUp() override { ErrorHandler_ctor(&error_handler_); }
 
   ErrorHandler error_handler_;
+
+  FreertosMock freertos_mock_;
 };
 
 TEST_F(ErrorHandlerStartTest, AccessErrorWhileNotStarted) {
@@ -42,38 +44,20 @@ TEST_F(ErrorHandlerStartTest, AccessErrorWhileNotStarted) {
 }
 
 TEST_F(ErrorHandlerStartTest, ErrorHandlerStart) {
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
+
   EXPECT_EQ(ErrorHandler_start(&error_handler_), MODULE_OK);
 }
-
-#if 0
 
 /* error handler access error test -------------------------------------------*/
 class ErrorHandlerAccessErrorTest : public Test {
  protected:
   void SetUp() override {
-    EXPECT_CALL(freertos_mock_, xPortIsInsideInterrupt)
-        .WillRepeatedly(Return(pdFALSE));
-    SIMULATE_FREERTOS_CALL_ONCE(freertos_mock_, freertos_simulator_,
-                                xTaskCreateStatic);
-    SIMULATE_FREERTOS_CALL(freertos_mock_, freertos_simulator_,
-                           xTaskGetTickCount);
-    SIMULATE_FREERTOS_CALL(freertos_mock_, freertos_simulator_,
-                           xTaskDelayUntil);
-    SIMULATE_FREERTOS_CALL(freertos_mock_, freertos_simulator_, xTaskNotify);
-    SIMULATE_FREERTOS_CALL(freertos_mock_, freertos_simulator_,
-                           xTaskNotifyWait);
-
     ErrorHandler_ctor(&error_handler_);
     ErrorHandler_start(&error_handler_);
-
-    freertos_simulator_.start();
   }
 
-  void TearDown() override { freertos_simulator_.stop(); }
-
-  FreeRTOS_Mock freertos_mock_;
-
-  FreertosSimulator freertos_simulator_;
+  void TearDown() override { vTaskDelete(error_handler_.super_.task_handle_); }
 
   ErrorHandler error_handler_;
 };
@@ -111,4 +95,4 @@ TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerGetErrorTest) {
             ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
 }
 
-#endif
+int main(int argc, char** argv) { return mock::run_freertos_test(&argc, argv); }
