@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 // stm32 include
-#include "cmsis_os.h"
 #if defined(STM32G431xx)
 #include "stm32g4xx_hal.h"
 #elif defined(STM32H723xx)
@@ -20,7 +19,7 @@
 
 /* virtual function redirection ----------------------------------------------*/
 inline ModuleRet LedController_start(LedController* const self) {
-  return self->super_.vptr->start((Task*)self);
+  return self->super_.vptr_->start((Task*)self);
 }
 
 /* virtual function definition -----------------------------------------------*/
@@ -29,20 +28,20 @@ ModuleRet __LedController_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   LedController* const self = (LedController*)_self;
-  if (self->super_.state_ == TASK_RUNNING) {
-    return MODULE_BUSY;
+  if (self->super_.state_ == TaskRunning) {
+    return ModuleBusy;
   }
 
   for (int i = 0; i < self->num_led_; i++) {
     if (self->led_control_block_[i].state == LED_RESET) {
-      return MODULE_ERROR;
+      return ModuleError;
     }
   }
 
-  Task_create_freertos_task((Task*)self, "led_controller", osPriorityLow,
+  Task_create_freertos_task((Task*)self, "led_controller", TaskPriorityLow,
                             self->task_stack_,
                             sizeof(self->task_stack_) / sizeof(StackType_t));
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -57,7 +56,7 @@ void LedController_ctor(LedController* const self, const int num_led,
   static struct TaskVtbl vtbl = {
       .start = __LedController_start,
   };
-  self->super_.vptr = &vtbl;
+  self->super_.vptr_ = &vtbl;
 
   // initialize member variable
   self->num_led_ = num_led;
@@ -83,8 +82,8 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
   module_assert(IS_NOT_NULL(self));
   module_assert(IS_LESS(led_num, self->num_led_));
 
-  if (self->super_.state_ != TASK_RUNNING) {
-    return MODULE_ERROR;
+  if (self->super_.state_ != TaskRunning) {
+    return ModuleError;
   }
 
   if (self->led_control_block_[led_num].state != LED_ON) {
@@ -97,15 +96,15 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
     self->led_control_block_[led_num].state = LED_ON;
   }
 
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 ModuleRet LedController_turn_off(LedController* const self, const int led_num) {
   module_assert(IS_NOT_NULL(self));
   module_assert(IS_LESS(led_num, self->num_led_));
 
-  if (self->super_.state_ != TASK_RUNNING) {
-    return MODULE_ERROR;
+  if (self->super_.state_ != TaskRunning) {
+    return ModuleError;
   }
 
   if (self->led_control_block_[led_num].state != LED_OFF) {
@@ -116,7 +115,7 @@ ModuleRet LedController_turn_off(LedController* const self, const int led_num) {
     self->led_control_block_[led_num].state = LED_OFF;
   }
 
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 ModuleRet LedController_blink(LedController* const self, const int led_num,
@@ -125,10 +124,10 @@ ModuleRet LedController_blink(LedController* const self, const int led_num,
   module_assert(IS_LESS(led_num, self->num_led_));
   module_assert(IS_POSTIVE(period));
 
-  if (self->super_.state_ != TASK_RUNNING) {
-    return MODULE_ERROR;
+  if (self->super_.state_ != TaskRunning) {
+    return ModuleError;
   } else if (self->led_control_block_[led_num].state == LED_ON) {
-    return MODULE_BUSY;
+    return ModuleBusy;
   }
 
   if (self->led_control_block_[led_num].state != LED_ON &&
@@ -142,7 +141,7 @@ ModuleRet LedController_blink(LedController* const self, const int led_num,
     self->led_control_block_[led_num].state = LED_BLINKING;
   }
 
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 void LedController_task_code(void* _self) {

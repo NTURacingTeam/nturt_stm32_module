@@ -40,13 +40,13 @@ TEST_F(ErrorHandlerStartTest, AccessErrorWhileNotStarted) {
   EXPECT_EQ(
       ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
                                ERROR_OPTION_SET),
-      MODULE_ERROR);
+      ModuleError);
 }
 
 TEST_F(ErrorHandlerStartTest, ErrorHandlerStart) {
   EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
 
-  EXPECT_EQ(ErrorHandler_start(&error_handler_), MODULE_OK);
+  EXPECT_EQ(ErrorHandler_start(&error_handler_), ModuleOK);
 }
 
 /* error handler access error test -------------------------------------------*/
@@ -67,7 +67,7 @@ TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerWriteError) {
                                      ERROR_CODE_CAN_TRANSMIT_ERROR |
                                          ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR,
                                      ERROR_OPTION_SET),
-            MODULE_OK);
+            ModuleOK);
   EXPECT_EQ(
       error_handler_.error_code_,
       ERROR_CODE_CAN_TRANSMIT_ERROR | ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
@@ -75,7 +75,7 @@ TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerWriteError) {
   EXPECT_EQ(
       ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
                                ERROR_OPTION_CLEAR),
-      MODULE_OK);
+      ModuleOK);
 
   EXPECT_EQ(error_handler_.error_code_, ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
 }

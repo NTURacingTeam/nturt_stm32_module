@@ -5,7 +5,9 @@
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <cstring>
 #include <mutex>
+#include <string>
 #include <thread>
 
 extern "C" {
@@ -23,8 +25,8 @@ extern "C" {
 
 /* type ----------------------------------------------------------------------*/
 enum class FreertosSimulatorMode {
-  COUNT_DOWN,
-  CONTINUOUS,
+  Countdown,
+  Continuous,
 };
 
 /* mock ----------------------------------------------------------------------*/
@@ -38,6 +40,74 @@ class CommonMock : public CMockMocker<CommonMock> {
   CMOCK_MOCK_METHOD(void, __module_assert_fail,
                     (const char *, const char *, unsigned int, const char *));
 };
+
+namespace testing {
+
+template <typename T>
+class CArrayMatcher : public MatcherInterface<T> {
+ public:
+  explicit CArrayMatcher(T expected_array, int array_length)
+      : expected_array_(expected_array), array_length_(array_length) {}
+
+  bool MatchAndExplain(T array, MatchResultListener *listener) const override {
+    return std::memcmp(array, expected_array_,
+                       sizeof(expected_array_[0]) * array_length_) == 0;
+  }
+
+  void DescribeTo(::std::ostream *os) const override {
+    if (std::is_same<T, const char *>::value ||
+        std::is_same<T, char *>::value) {
+      *os << "is equal to c string \"" << expected_array_ << "\"";
+    } else {
+      *os << "is equal to {";
+      for (int i = 0; i < array_length_; ++i) {
+        *os << std::to_string(expected_array_[i]);
+        if (i != array_length_ - 1) {
+          *os << ", ";
+        }
+      }
+      *os << "}";
+    }
+  }
+
+  void DescribeNegationTo(::std::ostream *os) const override {
+    if (std::is_same<T, const char *>::value ||
+        std::is_same<T, char *>::value) {
+      *os << "isn't equal to c string \"" << expected_array_ << "\"";
+    } else {
+      *os << "isn't equal to {";
+      for (int i = 0; i < array_length_; ++i) {
+        *os << std::to_string(expected_array_[i]);
+        if (i != array_length_ - 1) {
+          *os << ", ";
+        }
+      }
+      *os << "}";
+    }
+  }
+
+ private:
+  T expected_array_;
+  int array_length_;
+};
+
+/**
+ * @brief Matcher for c-style array.
+ *
+ * @tparam T Type of array.
+ * @param expected_array Expected array.
+ * @param array_length The length of array, which is the number of elements in
+ * that array.
+ *
+ * @note If the array's element type is not a primitive type, it should have a
+ * overloaded std::to_string() function, or it will not compile
+ */
+template <typename T>
+Matcher<T> ArrayWithSize(T expected_array, int array_length) {
+  return Matcher<T>(new CArrayMatcher(expected_array, array_length));
+}
+
+}  // namespace testing
 
 namespace mock {
 
@@ -184,7 +254,7 @@ class FreertosSimulator {
   bool task_notify_check_;
 
   /* kernel ------------------------------------------------------------------*/
-  FreertosSimulatorMode mode_ = FreertosSimulatorMode::CONTINUOUS;
+  FreertosSimulatorMode mode_ = FreertosSimulatorMode::Continuous;
 
   TickType_t current_tick_ = 0;
 

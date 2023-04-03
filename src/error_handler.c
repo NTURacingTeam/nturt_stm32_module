@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 // stm32 include
-#include "cmsis_os.h"
 #if defined(STM32G431xx)
 #include "stm32g4xx_hal.h"
 #elif defined(STM32H723xx)
@@ -20,7 +19,7 @@
 
 /* virtual function redirection ----------------------------------------------*/
 inline ModuleRet ErrorHandler_start(ErrorHandler* const self) {
-  return self->super_.vptr->start((Task*)self);
+  return self->super_.vptr_->start((Task*)self);
 }
 
 /* virtual function definition -----------------------------------------------*/
@@ -29,14 +28,14 @@ ModuleRet __ErrorHandler_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ErrorHandler* const self = (ErrorHandler*)_self;
-  if (self->super_.state_ == TASK_RUNNING) {
-    return MODULE_BUSY;
+  if (self->super_.state_ == TaskRunning) {
+    return ModuleBusy;
   }
 
-  Task_create_freertos_task((Task*)self, "error_handler", osPriorityRealtime,
+  Task_create_freertos_task((Task*)self, "error_handler", TaskPriorityRealtime,
                             self->task_stack_,
                             sizeof(self->task_stack_) / sizeof(StackType_t));
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -48,7 +47,7 @@ void ErrorHandler_ctor(ErrorHandler* self) {
   static struct TaskVtbl vtbl = {
       .start = __ErrorHandler_start,
   };
-  self->super_.vptr = &vtbl;
+  self->super_.vptr_ = &vtbl;
 
   // initialize member variable
   self->error_code_ = 0;
@@ -62,8 +61,8 @@ ModuleRet ErrorHandler_write_error(ErrorHandler* const self,
   module_assert(IS_ERROR_CODE(error_code));
   module_assert(IS_ERROR_OPTION(option));
 
-  if (self->super_.state_ != TASK_RUNNING) {
-    return MODULE_ERROR;
+  if (self->super_.state_ != TaskRunning) {
+    return ModuleError;
   }
 
   if (xPortIsInsideInterrupt()) {
@@ -76,7 +75,7 @@ ModuleRet ErrorHandler_write_error(ErrorHandler* const self,
                 error_code | option, eSetBits);
   }
 
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 uint32_t ErrorHandler_get_error(const ErrorHandler* const self) {

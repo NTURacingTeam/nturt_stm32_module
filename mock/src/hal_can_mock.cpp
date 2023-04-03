@@ -21,6 +21,11 @@ CMOCK_MOCK_FUNCTION(HAL_CANMock, HAL_StatusTypeDef,
                     (FDCAN_HandleTypeDef *, FDCAN_TxHeaderTypeDef *,
                      uint8_t *));
 
+CMOCK_MOCK_FUNCTION(HAL_CANMock, HAL_StatusTypeDef,
+                    HAL_FDCAN_AddMessageToTxBuffer,
+                    (FDCAN_HandleTypeDef *, uint32_t, FDCAN_TxHeaderTypeDef *,
+                     uint8_t *));
+
 CMOCK_MOCK_FUNCTION(HAL_CANMock, HAL_StatusTypeDef, HAL_FDCAN_GetRxMessage,
                     (FDCAN_HandleTypeDef *, uint32_t, FDCAN_RxHeaderTypeDef *,
                      uint8_t *));

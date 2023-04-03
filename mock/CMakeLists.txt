@@ -3,6 +3,7 @@
 ################################################################################
 # library: mock
 add_library(mock
+    src/can_transceiver_mock.cpp
     src/cmsis_os2_mock.cpp
     src/freertos_mock.cpp
     src/hal_can_mock.cpp

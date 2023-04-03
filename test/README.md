@@ -13,7 +13,13 @@ Note: Assertion of function parameter checking is not tested.
 - CanTransceiverInitTest
   - CanTransceiverCtor
 - CanTransceiverStartTest
+  - TransmitWhileNotStarted
   - CanTransceiverStart
+- CanTransceiverTransceiveTest
+  - PeriodicUpdate
+  - Transmit
+  - Receive
+  - ReceiveHighPriorityMessage
 
 ### error_handler
 
@@ -72,8 +78,8 @@ For those how writing new test for stm32 module, please note:
   TEST_F(FoorStartTest, FooStart) {
     EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
 
-    EXPECT_EQ(Foo_start(&foo_), MODULE_OK);
-    EXPECT_EQ(foo_.super_.state_, TASK_RUNNING);
+    EXPECT_EQ(Foo_start(&foo_), ModuleOK);
+    EXPECT_EQ(foo_.super_.state_, TaskRunning);
   }
   ```
   UPDATE: May not be a thing anymore.

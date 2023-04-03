@@ -40,7 +40,7 @@ int run_freertos_test(int *argc, char **argv) {
 
   int test_result;
   xTaskCreate(googletest_task, "googletest_task", PTHREAD_STACK_MIN,
-              &test_result, 1, NULL);
+              &test_result, TaskPriorityLowest, NULL);
   vTaskStartScheduler();
 
   return test_result;
@@ -76,7 +76,7 @@ void Notification::notify_all() {
 FreertosSimulator::FreertosSimulator() {}
 
 FreertosSimulator::FreertosSimulator(TickType_t tick_to_run)
-    : tick_to_run_(tick_to_run), mode_(FreertosSimulatorMode::COUNT_DOWN) {}
+    : tick_to_run_(tick_to_run), mode_(FreertosSimulatorMode::Countdown) {}
 
 void FreertosSimulator::start() {
   if (!task_code_) {
@@ -118,7 +118,7 @@ BaseType_t FreertosSimulator::xTaskDelayUntil(
   // wait some time to prevent wierd instabilities
   std::this_thread::sleep_for(std::chrono::microseconds(100));
 
-  if (mode_ == FreertosSimulatorMode::COUNT_DOWN &&
+  if (mode_ == FreertosSimulatorMode::Countdown &&
       current_tick_ >= tick_to_run_) {
     return MODULE_END;
   } else if (should_stop_.load()) {

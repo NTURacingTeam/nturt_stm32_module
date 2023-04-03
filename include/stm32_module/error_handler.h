@@ -47,7 +47,7 @@ typedef void (*ErrorCallback_t)(void*, uint32_t);
 #define IS_ERROR_OPTION(CODE_WRITE) \
   (((CODE_WRITE) == ERROR_OPTION_SET) || ((CODE_WRITE) == ERROR_OPTION_CLEAR))
 
-/* class ---------------------------------------------------------------------*/
+/* class inherited from Task -------------------------------------------------*/
 typedef struct error_handler {
   // inherited class
   Task super_;

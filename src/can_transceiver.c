@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 // stm32 include
-#include "cmsis_os.h"
 #if defined(STM32G431xx)
 #include "stm32g4xx_hal.h"
 #elif defined(STM32H723xx)
@@ -22,7 +21,7 @@
 #include "stm32_module/module_common.h"
 
 /* static variable -----------------------------------------------------------*/
-// convenient array for numbering gpio ports
+// convenient array for numbering fdcan peripheral
 #if defined(STM32G431xx)
 #define NUM_FDCAN_INSTANCE 1
 static const FDCAN_GlobalTypeDef* fdcan_instance[NUM_FDCAN_INSTANCE] = {FDCAN1};
@@ -44,7 +43,7 @@ static FDCAN_TxHeaderTypeDef tx_header = {
 
 /* virtual function redirection ----------------------------------------------*/
 inline ModuleRet CanTransceiver_start(CanTransceiver* const self) {
-  return self->super_.vptr->start((Task*)self);
+  return self->super_.vptr_->start((Task*)self);
 }
 
 inline ModuleRet CanTransceiver_configure(CanTransceiver* const self) {
@@ -76,54 +75,40 @@ ModuleRet __CanTransceiver_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   CanTransceiver* const self = (CanTransceiver*)_self;
-  if (self->super_.state_ == TASK_RUNNING) {
-    return MODULE_BUSY;
+  if (self->super_.state_ == TaskRunning) {
+    return ModuleBusy;
   }
 
   CanTransceiver_configure(self);
   Task_create_freertos_task((Task*)self, "can_transceiver",
-                            osPriorityAboveNormal, self->task_stack_,
+                            TaskPriorityAboveNormal, self->task_stack_,
                             sizeof(self->task_stack_) / sizeof(StackType_t));
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 // default to do nothing
-ModuleRet __CanTransceiver_configure(CanTransceiver* const self) { (void)self; }
+ModuleRet __CanTransceiver_configure(CanTransceiver* const /*self*/) {}
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_receive(CanTransceiver* const self,
-                                   const bool is_extended, const uint32_t id,
-                                   const uint8_t dlc,
-                                   const uint8_t* const data) {
-  (void)self;
-  (void)is_extended;
-  (void)id;
-  (void)dlc;
-  (void)data;
-
+ModuleRet __CanTransceiver_receive(CanTransceiver* const /*self*/,
+                                   const bool /*is_extended*/,
+                                   const uint32_t /*id*/, const uint8_t /*dlc*/,
+                                   const uint8_t* const /*data*/) {
   module_assert(0);
 }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_receive_hp(CanTransceiver* const self,
-                                      const bool is_extended, const uint32_t id,
-                                      const uint8_t dlc,
-                                      const uint8_t* const data) {
-  (void)self;
-  (void)is_extended;
-  (void)id;
-  (void)dlc;
-  (void)data;
-
+ModuleRet __CanTransceiver_receive_hp(CanTransceiver* const /*self*/,
+                                      const bool /*is_extended*/,
+                                      const uint32_t /*id*/,
+                                      const uint8_t /*dlc*/,
+                                      const uint8_t* const /*data*/) {
   module_assert(0);
 }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_periodic_update(CanTransceiver* const self,
-                                           const TickType_t current_tick) {
-  (void)self;
-  (void)current_tick;
-
+ModuleRet __CanTransceiver_periodic_update(CanTransceiver* const /*self*/,
+                                           const TickType_t /*current_tick*/) {
   module_assert(0);
 }
 
@@ -138,7 +123,7 @@ void CanTransceiver_ctor(CanTransceiver* const self,
   static struct TaskVtbl vtbl = {
       .start = __CanTransceiver_start,
   };
-  self->super_.vptr = &vtbl;
+  self->super_.vptr_ = &vtbl;
 
   // assign base virtual function
   static struct CanTransceiverVtbl vtbl_base = {
@@ -166,7 +151,12 @@ ModuleRet CanTransceiver_transmit(CanTransceiver* const self,
                                   const bool is_extended, const uint32_t id,
                                   const uint8_t dlc, uint8_t* const data) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_DLC(dlc));
   module_assert(IS_NOT_NULL(data));
+
+  if (self->super_.state_ != TaskRunning) {
+    return ModuleError;
+  }
 
   tx_header.IdType = is_extended ? FDCAN_EXTENDED_ID : FDCAN_STANDARD_ID;
   tx_header.Identifier = id;
@@ -174,9 +164,9 @@ ModuleRet CanTransceiver_transmit(CanTransceiver* const self,
 
   if (HAL_FDCAN_AddMessageToTxFifoQ(self->can_handle_, &tx_header, data) !=
       HAL_OK) {
-    return MODULE_ERROR;
+    return ModuleError;
   }
-  return MODULE_OK;
+  return ModuleOK;
 }
 
 void CanTransceiver_task_code(void* const _self) {
@@ -229,9 +219,8 @@ void CanFrame_end_access(CanFrame* const self) {
 
 /* static and callback function ----------------------------------------------*/
 // freertos deferred interrupt handler for receiving high priority can message
-static void received_hp_deferred(void* const _self, const uint32_t argument) {
-  (void)argument;
-
+static void received_hp_deferred(void* const _self,
+                                 const uint32_t /*argument*/) {
   CanTransceiver* const self = (CanTransceiver*)_self;
   FDCAN_RxHeaderTypeDef rx_header;
   uint8_t rx_data[8];

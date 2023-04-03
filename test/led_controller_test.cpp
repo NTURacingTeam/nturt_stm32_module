@@ -55,7 +55,7 @@ TEST(LedControllerInitTest, LedControllerInitLed) {
 
   LedController_ctor(&led_controller, NUM_LED, led_control_block);
 
-  LedController_init_led(&led_controller, 0, num_to_gpio_port[0], 0), MODULE_OK;
+  LedController_init_led(&led_controller, 0, num_to_gpio_port[0], 0), ModuleOK;
   EXPECT_EQ(led_controller.led_control_block_[0].led_port, GPIOA);
   EXPECT_EQ(led_controller.led_control_block_[0].led_pin, 0);
   EXPECT_EQ(led_controller.led_control_block_[0].state, LED_OFF);
@@ -81,16 +81,16 @@ TEST_F(LedControllerStartTest, TurnOnOffBlinkWileNotStarted) {
   EXPECT_CALL(gpio_mock_, HAL_GPIO_WritePin).Times(0);
   EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(0);
 
-  EXPECT_EQ(LedController_turn_on(&led_controller_, 0), MODULE_ERROR);
-  EXPECT_EQ(LedController_turn_off(&led_controller_, 0), MODULE_ERROR);
-  EXPECT_EQ(LedController_blink(&led_controller_, 0, 0), MODULE_ERROR);
+  EXPECT_EQ(LedController_turn_on(&led_controller_, 0), ModuleError);
+  EXPECT_EQ(LedController_turn_off(&led_controller_, 0), ModuleError);
+  EXPECT_EQ(LedController_blink(&led_controller_, 0, 0), ModuleError);
 }
 
 TEST_F(LedControllerStartTest, PartiallyInitializedLed) {
   EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(0);
 
   LedController_init_led(&led_controller_, 0, num_to_gpio_port[0], 0);
-  EXPECT_EQ(LedController_start(&led_controller_), MODULE_ERROR);
+  EXPECT_EQ(LedController_start(&led_controller_), ModuleError);
 }
 
 TEST_F(LedControllerStartTest, FullyInitializedLed) {
@@ -99,8 +99,8 @@ TEST_F(LedControllerStartTest, FullyInitializedLed) {
   for (int i = 0; i < NUM_LED; i++) {
     LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
   }
-  EXPECT_EQ(LedController_start(&led_controller_), MODULE_OK);
-  EXPECT_EQ(led_controller_.super_.state_, TASK_RUNNING);
+  EXPECT_EQ(LedController_start(&led_controller_), ModuleOK);
+  EXPECT_EQ(led_controller_.super_.state_, TaskRunning);
 }
 
 /* led controller on off test ------------------------------------------------*/
@@ -112,6 +112,8 @@ class LedControllerOnOffTest : public Test {
       LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
     }
     LedController_start(&led_controller_);
+    // yield for led controller to run
+    vPortYield();
   }
 
   void TearDown() override { vTaskDelete(led_controller_.super_.task_handle_); }
@@ -131,7 +133,7 @@ TEST_F(LedControllerOnOffTest, TurnOnLed) {
   }
 
   for (int i = 0; i < NUM_LED; i++) {
-    EXPECT_EQ(LedController_turn_on(&led_controller_, i), MODULE_OK);
+    EXPECT_EQ(LedController_turn_on(&led_controller_, i), ModuleOK);
   }
 }
 
@@ -140,8 +142,8 @@ TEST_F(LedControllerOnOffTest, TurnOnLedWhileOn) {
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
       .Times(1);
 
-  EXPECT_EQ(LedController_turn_on(&led_controller_, 0), MODULE_OK);
-  EXPECT_EQ(LedController_turn_on(&led_controller_, 0), MODULE_OK);
+  EXPECT_EQ(LedController_turn_on(&led_controller_, 0), ModuleOK);
+  EXPECT_EQ(LedController_turn_on(&led_controller_, 0), ModuleOK);
 }
 
 TEST_F(LedControllerOnOffTest, TurnOffLed) {
@@ -161,11 +163,11 @@ TEST_F(LedControllerOnOffTest, TurnOffLed) {
   }
 
   for (int i = 0; i < NUM_LED; i++) {
-    EXPECT_EQ(LedController_turn_on(&led_controller_, i), MODULE_OK);
+    EXPECT_EQ(LedController_turn_on(&led_controller_, i), ModuleOK);
   }
 
   for (int i = 0; i < NUM_LED; i++) {
-    EXPECT_EQ(LedController_turn_off(&led_controller_, i), MODULE_OK);
+    EXPECT_EQ(LedController_turn_off(&led_controller_, i), ModuleOK);
   }
 }
 
@@ -219,6 +221,8 @@ class LedControllerBlinkTest : public Test {
       LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
     }
     LedController_start(&led_controller_);
+    // yield for led controller to run
+    vPortYield();
   }
 
   void TearDown() override { vTaskDelete(led_controller_.super_.task_handle_); }
@@ -252,7 +256,7 @@ TEST_F(LedControllerBlinkTest, BlinkLed) {
     }
   }
   for (int i = 0; i < NUM_LED; i++) {
-    EXPECT_EQ(LedController_blink(&led_controller_, i, 100), MODULE_OK);
+    EXPECT_EQ(LedController_blink(&led_controller_, i, 100), ModuleOK);
 
     TickType_t period = reset_future[i].get() - set_future[i].get();
     EXPECT_LE(period, 100 + 10);
@@ -343,10 +347,10 @@ TEST_F(LedControllerBlinkTest, BlinkLedWhileOn) {
       .Times(0);
 
   LedController_turn_on(&led_controller_, 0);
-  EXPECT_EQ(LedController_blink(&led_controller_, 0, 100), MODULE_BUSY);
+  EXPECT_EQ(LedController_blink(&led_controller_, 0, 100), ModuleBusy);
 
   // wait some time to check if the led is ever turned off
-  vTaskDelay(5);
+  vTaskDelay(200);
 }
 
 TEST_F(LedControllerBlinkTest, TurnOnLedWhileBlinking) {
@@ -361,7 +365,7 @@ TEST_F(LedControllerBlinkTest, TurnOnLedWhileBlinking) {
   LedController_turn_on(&led_controller_, 0);
 
   // wait some time to check if the led is ever turned off
-  vTaskDelay(5);
+  vTaskDelay(200);
 }
 
 TEST_F(LedControllerBlinkTest, TurnOffLedWhileBlinking) {

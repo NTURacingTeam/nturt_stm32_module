@@ -13,11 +13,11 @@ extern "C" {
 #include "cmock/cmock.h"
 
 /// @brief Class for mocking cmsis rtos v2 function using google test framework.
-class CMSIS_OS2Mock : public CMockMocker<CMSIS_OS2Mock> {
+class CmsisOs2Mock : public CMockMocker<CmsisOs2Mock> {
  public:
-  CMSIS_OS2Mock();
+  CmsisOs2Mock();
 
-  ~CMSIS_OS2Mock();
+  ~CmsisOs2Mock();
 
   /* kernel menagenent functions ---------------------------------------------*/
   CMOCK_MOCK_METHOD(uint32_t, osKernelGetTickCount, ());

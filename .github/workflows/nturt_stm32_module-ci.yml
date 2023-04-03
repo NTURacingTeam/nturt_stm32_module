@@ -1,0 +1,27 @@
+name: Build and test nturt_stm32_module
+
+on: [push]
+jobs:
+
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install dependencies
+      run: sudo apt-get install -y gcc-multilib g++-multilib
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Build
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        make
+
+    - name: Run tests
+      run: |
+        cd build/test
+        ctest

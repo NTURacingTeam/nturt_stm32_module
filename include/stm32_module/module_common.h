@@ -20,15 +20,27 @@ extern "C" {
 
 /* type ----------------------------------------------------------------------*/
 typedef enum module_ret {
-  MODULE_OK = 0,
-  MODULE_ERROR,
-  MODULE_TIMEOUT,
-  MODULE_BUSY,
+  ModuleOK = 0,
+  ModuleError,
+  ModuleTimeout,
+  ModuleBusy,
 } ModuleRet;
 
+typedef enum task_priority {
+  TaskPriorityNone = 0,
+  TaskPriorityIdle,
+  TaskPriorityLowest,
+  TaskPriorityLow,
+  TaskPriorityBelowNormal,
+  TaskPriorityNormal,
+  TaskPriorityAboveNormal,
+  TaskPriorityHigh,
+  TaskPriorityRealtime,
+} TaskPriority;
+
 typedef enum task_state {
-  TASK_RESET = 0,
-  TASK_RUNNING,
+  TaskReset = 0,
+  TaskRunning,
 } TaskState;
 
 /* macro ---------------------------------------------------------------------*/
@@ -68,7 +80,7 @@ struct TaskVtbl;
  */
 typedef struct task {
   // virtual table
-  struct TaskVtbl* vptr;
+  struct TaskVtbl* vptr_;
 
   // member variable
   TaskState state_;

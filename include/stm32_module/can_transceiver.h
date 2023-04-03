@@ -29,7 +29,11 @@ extern "C" {
 // stm32_module include
 #include "stm32_module/module_common.h"
 
-/* abstract class ------------------------------------------------------------*/
+/* macro ---------------------------------------------------------------------*/
+// assert macro
+#define IS_DLC(DLC) ((DLC) <= 8U)
+
+/* abstract class inherited from Task ----------------------------------------*/
 struct CanTransceiverVtbl;
 
 /**
