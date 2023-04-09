@@ -11,7 +11,7 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
-      uses: ./.github/actions/dependencise
+      uses: ./.github/actions/dependencies
 
     - name: Build
       run: |
@@ -30,7 +30,7 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
-      uses: ./.github/actions/dependencise
+      uses: ./.github/actions/dependencies
 
     - name: Build
       run: |
@@ -49,7 +49,7 @@ jobs:
         submodules: recursive
 
     - name: Install dependencies
-      uses: ./.github/actions/dependencise
+      uses: ./.github/actions/dependencies
 
     - name: Build
       run: |
