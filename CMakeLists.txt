@@ -17,8 +17,12 @@ add_link_options(-m32)
 add_compile_definitions(TESTING)
 
 # set stm32 family and type to use
-set(STM32FAMILY H7 CACHE STRING "STM32 family to use")
-set(STM32TYPE H723 CACHE STRING "STM32 type to use")
+if(NOT DEFINED STM32FAMILY)
+    set(STM32FAMILY H7 CACHE STRING "STM32 family to use")
+endif()
+if(NOT DEFINED STM32TYPE)
+    set(STM32TYPE H723 CACHE STRING "STM32 type to use")
+endif()
 
 ################################################################################
 # dependency
@@ -38,6 +42,7 @@ add_subdirectory(mock)
 # library: stm32_module
 # build as a dynamic library for c-mock to mock out at link time
 add_library(stm32_module SHARED
+    src/button_monitor.c
     src/can_transceiver.c
     src/error_handler.c
     src/led_controller.c

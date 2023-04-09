@@ -2,10 +2,10 @@
 # setting
 ################################################################################
 if(NOT DEFINED STM32FAMILY)
-    message(FATAL_ERROR "STM32FAMILY not defined, should be one of G4, H7")
+    message(FATAL_ERROR "STM32FAMILY not defined, should be one of F4, G4, H7")
 endif()
 if(NOT DEFINED STM32TYPE)
-    message(FATAL_ERROR "STM32TYPE not defined, should be one of G4xx, H7xx, e.g. G431")
+    message(FATAL_ERROR "STM32TYPE not defined, should be one of F4xx, G4xx, H7xx, e.g. G431")
 endif()
 
 #library path

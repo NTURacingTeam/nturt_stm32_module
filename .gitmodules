@@ -16,3 +16,6 @@
 [submodule "lib/STM32CubeG4"]
 	path = lib/STM32CubeG4
 	url = https://github.com/STMicroelectronics/STM32CubeG4.git
+[submodule "lib/STM32CubeF4"]
+	path = lib/STM32CubeF4
+	url = https://github.com/STMicroelectronics/STM32CubeF4.git

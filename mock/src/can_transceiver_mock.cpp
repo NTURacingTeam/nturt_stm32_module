@@ -36,11 +36,9 @@ ModuleRet TestCan_periodic_update(TestCan* const self,
 }
 
 /* constructor ---------------------------------------------------------------*/
-void TestCan_ctor(TestCan* self) {
+void TestCan_ctor(TestCan* self, CanHandle* const can_handle) {
   // construct inherited class and redirect virtual function
-  FDCAN_HandleTypeDef can_handle;
-  can_handle.Instance = FDCAN1;
-  CanTransceiver_ctor(&self->super_, &can_handle);
+  CanTransceiver_ctor(&self->super_, can_handle);
   static struct CanTransceiverVtbl vtbl = {
       .configure = __TestCan_configure,
       .receive = __TestCan_receive,

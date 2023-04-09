@@ -20,9 +20,6 @@ extern "C" {
 // stm32_module include
 #include "stm32_module/module_common.h"
 
-/* type ----------------------------------------------------------------------*/
-typedef void (*ErrorCallback_t)(void*, uint32_t);
-
 /* macro ---------------------------------------------------------------------*/
 #define MAX_ERROR_CODE_BITS 31UL
 #define ERROR_CODE_INVALID_BITS (~((1UL << MAX_ERROR_CODE_BITS) - 1UL))
@@ -47,7 +44,14 @@ typedef void (*ErrorCallback_t)(void*, uint32_t);
 #define IS_ERROR_OPTION(CODE_WRITE) \
   (((CODE_WRITE) == ERROR_OPTION_SET) || ((CODE_WRITE) == ERROR_OPTION_CLEAR))
 
+/* type ----------------------------------------------------------------------*/
+typedef void (*ErrorCallback_t)(void*, uint32_t);
+
 /* class inherited from Task -------------------------------------------------*/
+/**
+ * @brief Class for handling error.
+ *
+ */
 typedef struct error_handler {
   // inherited class
   Task super_;

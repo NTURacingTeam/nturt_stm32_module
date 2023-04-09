@@ -1,15 +1,12 @@
 #include "stm32_module/can_transceiver.h"
 
 // glibc include
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
 // stm32 include
-#if defined(STM32G431xx)
-#include "stm32g4xx_hal.h"
-#elif defined(STM32H723xx)
-#include "stm32h7xx_hal.h"
-#endif
+#include "stm32_module/stm32_hal.h"
 
 // freertos include
 #include "FreeRTOS.h"
@@ -21,25 +18,18 @@
 #include "stm32_module/module_common.h"
 
 /* static variable -----------------------------------------------------------*/
-// convenient array for numbering fdcan peripheral
-#if defined(STM32G431xx)
-#define NUM_FDCAN_INSTANCE 1
-static const FDCAN_GlobalTypeDef* fdcan_instance[NUM_FDCAN_INSTANCE] = {FDCAN1};
-#elif defined(STM32H723xx)
-#define NUM_FDCAN_INSTANCE 3
-static const FDCAN_GlobalTypeDef* fdcan_instance[NUM_FDCAN_INSTANCE] = {
-    FDCAN1, FDCAN2, FDCAN3};
-#endif
+/// @brief List for tracking the list of can transceivers for using in high
+/// priority message callback.
+static List can_transceiver_list;
 
-static CanTransceiver* transceiver_for_fdcan[NUM_FDCAN_INSTANCE] = {};
-
-static FDCAN_TxHeaderTypeDef tx_header = {
-    .TxFrameType = FDCAN_DATA_FRAME,
-    .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
-    .BitRateSwitch = FDCAN_BRS_OFF,
-    .FDFormat = FDCAN_FD_CAN,
-    .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-    .MessageMarker = 0};
+/**
+ * @brief Flag for checking if this is the first can transceiver for
+ * initializing can_transceiver_list.
+ *
+ * This variable is not set to static since it has to be reset to true for
+ * testing.
+ */
+/*static*/ bool is_first_can_transceiver = true;
 
 /* virtual function redirection ----------------------------------------------*/
 inline ModuleRet CanTransceiver_start(CanTransceiver* const self) {
@@ -114,7 +104,7 @@ ModuleRet __CanTransceiver_periodic_update(CanTransceiver* const /*self*/,
 
 /* constructor ---------------------------------------------------------------*/
 void CanTransceiver_ctor(CanTransceiver* const self,
-                         FDCAN_HandleTypeDef* const can_handle) {
+                         CanHandle* const can_handle) {
   module_assert(IS_NOT_NULL(self));
   module_assert(IS_NOT_NULL(can_handle));
 
@@ -136,14 +126,12 @@ void CanTransceiver_ctor(CanTransceiver* const self,
 
   // initialize member variable
   self->can_handle_ = can_handle;
-  for (int i = 0; i < NUM_FDCAN_INSTANCE; i++) {
-    if (can_handle->Instance == fdcan_instance[i]) {
-      transceiver_for_fdcan[i] = self;
-      return;
-    }
+  if (is_first_can_transceiver) {
+    List_ctor(&can_transceiver_list);
+    is_first_can_transceiver = false;
   }
-
-  module_assert(0);
+  List_push_back(&can_transceiver_list, &self->can_transceiver_list_cb,
+                 (void*)self);
 }
 
 /* member function -----------------------------------------------------------*/
@@ -158,14 +146,39 @@ ModuleRet CanTransceiver_transmit(CanTransceiver* const self,
     return ModuleError;
   }
 
+#if defined(HAL_CAN_MODULE_ENABLED)
+  static CAN_TxHeaderTypeDef tx_header = {
+      .IDE = CAN_ID_STD, .RTR = CAN_RTR_DATA, .TransmitGlobalTime = DISABLE};
+  tx_header.DLC = dlc;
+  if (is_extended) {
+    tx_header.IDE = CAN_ID_EXT;
+    tx_header.ExtId = id;
+  } else {
+    tx_header.IDE = CAN_ID_STD;
+    tx_header.StdId = id;
+  }
+  uint32_t tx_mailbox;
+  if (HAL_CAN_AddTxMessage(self->can_handle_, &tx_header, data, &tx_mailbox) !=
+      HAL_OK) {
+    return ModuleError;
+  }
+#elif defined(HAL_FDCAN_MODULE_ENABLED)
+  static FDCAN_TxHeaderTypeDef tx_header = {
+      .TxFrameType = FDCAN_DATA_FRAME,
+      .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
+      .BitRateSwitch = FDCAN_BRS_OFF,
+      .FDFormat = FDCAN_FD_CAN,
+      .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
+      .MessageMarker = 0};
   tx_header.IdType = is_extended ? FDCAN_EXTENDED_ID : FDCAN_STANDARD_ID;
   tx_header.Identifier = id;
   tx_header.DataLength = dlc << 16;
-
   if (HAL_FDCAN_AddMessageToTxFifoQ(self->can_handle_, &tx_header, data) !=
       HAL_OK) {
     return ModuleError;
   }
+#endif
+
   return ModuleOK;
 }
 
@@ -175,6 +188,20 @@ void CanTransceiver_task_code(void* const _self) {
 
   while (1) {
     // receive and decode can signal
+#if defined(HAL_CAN_MODULE_ENABLED)
+    uint32_t fifo_level =
+        HAL_CAN_GetRxFifoFillLevel(self->can_handle_, CAN_RX_FIFO0);
+    for (int i = 0; i < fifo_level; i++) {
+      CAN_RxHeaderTypeDef rx_header;
+      uint8_t rx_data[8];
+      HAL_CAN_GetRxMessage(self->can_handle_, CAN_RX_FIFO0, &rx_header,
+                           rx_data);
+      CanTransceiver_receive(
+          self, rx_header.IDE == CAN_ID_EXT,
+          rx_header.IDE == CAN_ID_EXT ? rx_header.ExtId : rx_header.StdId,
+          rx_header.DLC, rx_data);
+    }
+#elif defined(HAL_FDCAN_MODULE_ENABLED)
     uint32_t fifo_level =
         HAL_FDCAN_GetRxFifoFillLevel(self->can_handle_, FDCAN_RX_FIFO0);
     for (int i = 0; i < fifo_level; i++) {
@@ -185,6 +212,7 @@ void CanTransceiver_task_code(void* const _self) {
       CanTransceiver_receive(self, rx_header.IdType, rx_header.Identifier,
                              rx_header.DataLength >> 16, rx_data);
     }
+#endif
 
     // periodic update for checking timeout and transmit can signal, etc.
     CanTransceiver_periodic_update(self, last_wake);
@@ -222,32 +250,60 @@ void CanFrame_end_access(CanFrame* const self) {
 static void received_hp_deferred(void* const _self,
                                  const uint32_t /*argument*/) {
   CanTransceiver* const self = (CanTransceiver*)_self;
+#if defined(HAL_CAN_MODULE_ENABLED)
+  CAN_RxHeaderTypeDef rx_header;
+  uint8_t rx_data[8];
+  if (HAL_CAN_GetRxMessage(self->can_handle_, CAN_RX_FIFO1, &rx_header,
+                           rx_data) != HAL_OK) {
+    module_assert(0);
+  }
+  CanTransceiver_receive_hp(
+      self, rx_header.IDE == CAN_ID_EXT,
+      rx_header.IDE == CAN_ID_EXT ? rx_header.ExtId : rx_header.StdId,
+      rx_header.DLC, rx_data);
+#elif defined(HAL_FDCAN_MODULE_ENABLED)
   FDCAN_RxHeaderTypeDef rx_header;
   uint8_t rx_data[8];
   if (HAL_FDCAN_GetRxMessage(self->can_handle_, FDCAN_RX_FIFO1, &rx_header,
                              rx_data) != HAL_OK) {
     module_assert(0);
   }
-
   CanTransceiver_receive_hp(self, rx_header.IdType, rx_header.Identifier,
                             rx_header.DataLength >> 16, rx_data);
+#endif
 }
 
 // isr from fdcan fx fifo1 for receiving high priority can message
-void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
-                               uint32_t const RxFifo1ITs) {
-  if ((RxFifo1ITs & FDCAN_IT_RX_FIFO1_NEW_MESSAGE) != RESET) {
-    CanTransceiver* transceiver = NULL;
-    for (int i = 0; i < NUM_FDCAN_INSTANCE; i++) {
-      if (hfdcan->Instance == fdcan_instance[i] && transceiver_for_fdcan[i]) {
-        transceiver = transceiver_for_fdcan[i];
-        break;
-      }
-    }
-
+#if defined(HAL_CAN_MODULE_ENABLED)
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* const hcan) {
+  CanTransceiver* transceiver;
+  ListIter can_iter;
+  ListIter_ctor(&can_iter, &can_transceiver_list);
+  do {
+    transceiver = (CanTransceiver*)ListIter_next(&can_iter);
     if (transceiver == NULL) {
       module_assert(0);
     }
+  } while (transceiver->can_handle_ != hcan);
+
+  BaseType_t require_contex_switch = pdFALSE;
+  xTimerPendFunctionCallFromISR(received_hp_deferred, (void*)transceiver, 0,
+                                &require_contex_switch);
+  portYIELD_FROM_ISR(require_contex_switch);
+}
+#elif defined(HAL_FDCAN_MODULE_ENABLED)
+void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
+                               uint32_t const RxFifo1ITs) {
+  if ((RxFifo1ITs & FDCAN_IT_RX_FIFO1_NEW_MESSAGE) != RESET) {
+    CanTransceiver* transceiver;
+    ListIter can_iter;
+    ListIter_ctor(&can_iter, &can_transceiver_list);
+    do {
+      transceiver = (CanTransceiver*)ListIter_next(&can_iter);
+      if (transceiver == NULL) {
+        module_assert(0);
+      }
+    } while (transceiver->can_handle_ != hfdcan);
 
     BaseType_t require_contex_switch = pdFALSE;
     xTimerPendFunctionCallFromISR(received_hp_deferred, (void*)transceiver, 0,
@@ -255,3 +311,4 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
     portYIELD_FROM_ISR(require_contex_switch);
   }
 }
+#endif

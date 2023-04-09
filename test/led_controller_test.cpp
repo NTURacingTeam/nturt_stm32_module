@@ -7,11 +7,7 @@ extern "C" {
 #include "FreeRTOS.h"
 
 // stm32 include
-#if defined(STM32G431xx)
-#include "stm32g4xx_hal.h"
-#elif defined(STM32H723xx)
-#include "stm32h7xx_hal.h"
-#endif
+#include "stm32_module/stm32_hal.h"
 
 // stm32_module include
 #include "stm32_module/led_controller.h"
@@ -26,51 +22,49 @@ extern "C" {
 #include "mock/hal_gpio_mock.hpp"
 #include "mock/mock_common.hpp"
 
-// should be in (1, 10]
+using ::testing::_;
+using ::testing::InSequence;
+using ::testing::Invoke;
+using ::testing::Sequence;
+using ::testing::Test;
+using ::testing::WithArg;
+
+/* test parameters -----------------------------------------------------------*/
+// should be in (1, 7]
 #define NUM_LED 5
 #define REPEATED_TEST_TIMES 10
 
-using ::testing::InSequence;
-using ::testing::Sequence;
-using ::testing::Test;
-
+/* other variables -----------------------------------------------------------*/
 // convenient array for numbering gpio ports
-static GPIO_TypeDef* num_to_gpio_port[] = {GPIOA, GPIOB, GPIOC, GPIOD, GPIOE,
-                                           GPIOF, GPIOG, GPIOH, GPIOJ, GPIOK};
+static GPIO_TypeDef* num_to_gpio_port[] = {GPIOA, GPIOB, GPIOC, GPIOD,
+                                           GPIOE, GPIOF, GPIOG};
 
 /* led controller initialization test ----------------------------------------*/
 TEST(LedControllerInitTest, LedControllerCtor) {
-  LedControlBlock led_control_block[NUM_LED];
   LedController led_controller;
 
-  LedController_ctor(&led_controller, NUM_LED, led_control_block);
+  LedController_ctor(&led_controller);
 
-  EXPECT_EQ(led_controller.num_led_, NUM_LED);
-  EXPECT_EQ(led_controller.led_control_block_, led_control_block);
+  // really nothing to check
 }
 
 TEST(LedControllerInitTest, LedControllerInitLed) {
-  LedControlBlock led_control_block[NUM_LED];
   LedController led_controller;
+  struct led_cb led_cb;
 
-  LedController_ctor(&led_controller, NUM_LED, led_control_block);
-
-  LedController_init_led(&led_controller, 0, num_to_gpio_port[0], 0), ModuleOK;
-  EXPECT_EQ(led_controller.led_control_block_[0].led_port, GPIOA);
-  EXPECT_EQ(led_controller.led_control_block_[0].led_pin, 0);
-  EXPECT_EQ(led_controller.led_control_block_[0].state, LED_OFF);
+  LedController_ctor(&led_controller);
+  EXPECT_EQ(LedController_add_led(&led_controller, &led_cb, GPIOA, 0),
+            ModuleOK);
 }
 
 /* led controller start test -------------------------------------------------*/
 class LedControllerStartTest : public Test {
  protected:
-  void SetUp() override {
-    LedController_ctor(&led_controller_, NUM_LED, led_control_block_);
-  }
+  void SetUp() override { LedController_ctor(&led_controller_); }
 
   LedController led_controller_;
 
-  LedControlBlock led_control_block_[NUM_LED];
+  struct led_cb led_cb_;
 
   HAL_GPIOMock gpio_mock_;
 
@@ -86,46 +80,51 @@ TEST_F(LedControllerStartTest, TurnOnOffBlinkWileNotStarted) {
   EXPECT_EQ(LedController_blink(&led_controller_, 0, 0), ModuleError);
 }
 
-TEST_F(LedControllerStartTest, PartiallyInitializedLed) {
-  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(0);
+TEST_F(LedControllerStartTest, StartLedController) {
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic)
+      .WillOnce(
+          WithArg<6>(Invoke([](StaticTask_t* t) { return (TaskHandle_t)t; })));
 
-  LedController_init_led(&led_controller_, 0, num_to_gpio_port[0], 0);
-  EXPECT_EQ(LedController_start(&led_controller_), ModuleError);
-}
-
-TEST_F(LedControllerStartTest, FullyInitializedLed) {
-  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
-
-  for (int i = 0; i < NUM_LED; i++) {
-    LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
-  }
+  LedController_add_led(&led_controller_, &led_cb_, num_to_gpio_port[0], 0);
   EXPECT_EQ(LedController_start(&led_controller_), ModuleOK);
-  EXPECT_EQ(led_controller_.super_.state_, TaskRunning);
 }
 
-/* led controller on off test ------------------------------------------------*/
-class LedControllerOnOffTest : public Test {
+TEST_F(LedControllerStartTest, AddLedWhileStarted) {
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic)
+      .WillOnce(
+          WithArg<6>(Invoke([](StaticTask_t* t) { return (TaskHandle_t)t; })));
+
+  LedController_add_led(&led_controller_, &led_cb_, num_to_gpio_port[0], 0);
+  LedController_start(&led_controller_);
+  EXPECT_EQ(
+      LedController_add_led(&led_controller_, &led_cb_, num_to_gpio_port[1], 1),
+      ModuleError);
+}
+
+/* led controller on off blink test ------------------------------------------*/
+class LedControllerOnOffBlinkTest : public Test {
  protected:
   void SetUp() override {
-    LedController_ctor(&led_controller_, NUM_LED, led_control_block_);
+    LedController_ctor(&led_controller_);
     for (int i = 0; i < NUM_LED; i++) {
-      LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
+      LedController_add_led(&led_controller_, &led_cb_[i], num_to_gpio_port[i],
+                            i);
     }
     LedController_start(&led_controller_);
     // yield for led controller to run
     vPortYield();
   }
 
-  void TearDown() override { vTaskDelete(led_controller_.super_.task_handle_); }
+  void TearDown() override { Task_delete((Task*)&led_controller_); }
 
   LedController led_controller_;
 
-  LedControlBlock led_control_block_[NUM_LED];
+  struct led_cb led_cb_[NUM_LED];
 
   HAL_GPIOMock gpio_mock_;
 };
 
-TEST_F(LedControllerOnOffTest, TurnOnLed) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOnLed) {
   for (int i = 0; i < NUM_LED; i++) {
     EXPECT_CALL(gpio_mock_,
                 HAL_GPIO_WritePin(num_to_gpio_port[i], i, GPIO_PIN_SET))
@@ -137,7 +136,7 @@ TEST_F(LedControllerOnOffTest, TurnOnLed) {
   }
 }
 
-TEST_F(LedControllerOnOffTest, TurnOnLedWhileOn) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOnLedWhileOn) {
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
       .Times(1);
@@ -146,7 +145,7 @@ TEST_F(LedControllerOnOffTest, TurnOnLedWhileOn) {
   EXPECT_EQ(LedController_turn_on(&led_controller_, 0), ModuleOK);
 }
 
-TEST_F(LedControllerOnOffTest, TurnOffLed) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOffLed) {
   {
     // force to expect ordered call
     InSequence seq;
@@ -171,7 +170,7 @@ TEST_F(LedControllerOnOffTest, TurnOffLed) {
   }
 }
 
-TEST_F(LedControllerOnOffTest, TurnOffLedWhileOff) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOffLedWhileOff) {
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_RESET))
       .Times(0);
@@ -179,7 +178,7 @@ TEST_F(LedControllerOnOffTest, TurnOffLedWhileOff) {
   LedController_turn_off(&led_controller_, 0);
 }
 
-TEST_F(LedControllerOnOffTest, TurnOffLedWhileOffAndIsOnBefore) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOffLedWhileOffAndIsOnBefore) {
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
       .Times(1);
@@ -192,7 +191,7 @@ TEST_F(LedControllerOnOffTest, TurnOffLedWhileOffAndIsOnBefore) {
   LedController_turn_off(&led_controller_, 0);
 }
 
-TEST_F(LedControllerOnOffTest, RepetedlyTurnOnAndOffLed) {
+TEST_F(LedControllerOnOffBlinkTest, RepetedlyTurnOnAndOffLed) {
   {
     // force to expect ordered call
     InSequence seq;
@@ -212,29 +211,7 @@ TEST_F(LedControllerOnOffTest, RepetedlyTurnOnAndOffLed) {
   }
 }
 
-/* led controller blink test -------------------------------------------------*/
-class LedControllerBlinkTest : public Test {
- protected:
-  void SetUp() override {
-    LedController_ctor(&led_controller_, NUM_LED, led_control_block_);
-    for (int i = 0; i < NUM_LED; i++) {
-      LedController_init_led(&led_controller_, i, num_to_gpio_port[i], i);
-    }
-    LedController_start(&led_controller_);
-    // yield for led controller to run
-    vPortYield();
-  }
-
-  void TearDown() override { vTaskDelete(led_controller_.super_.task_handle_); }
-
-  LedController led_controller_;
-
-  LedControlBlock led_control_block_[NUM_LED];
-
-  HAL_GPIOMock gpio_mock_;
-};
-
-TEST_F(LedControllerBlinkTest, BlinkLed) {
+TEST_F(LedControllerOnOffBlinkTest, BlinkLed) {
   std::promise<TickType_t> set_promise[NUM_LED], reset_promise[NUM_LED];
   std::future<TickType_t> set_future[NUM_LED], reset_future[NUM_LED];
   for (int i = 0; i < NUM_LED; i++) {
@@ -264,7 +241,7 @@ TEST_F(LedControllerBlinkTest, BlinkLed) {
   }
 }
 
-TEST_F(LedControllerBlinkTest, RepeatedlyBlinkLed) {
+TEST_F(LedControllerOnOffBlinkTest, RepeatedlyBlinkLed) {
   std::promise<TickType_t> set_promise[REPEATED_TEST_TIMES],
       reset_promise[REPEATED_TEST_TIMES];
   std::future<TickType_t> set_future[REPEATED_TEST_TIMES],
@@ -298,7 +275,7 @@ TEST_F(LedControllerBlinkTest, RepeatedlyBlinkLed) {
   }
 }
 
-TEST_F(LedControllerBlinkTest, ConcurrentlyBlinkLed) {
+TEST_F(LedControllerOnOffBlinkTest, ConcurrentlyBlinkLed) {
   std::promise<TickType_t> set_promise[NUM_LED], reset_promise[NUM_LED];
   std::future<TickType_t> set_future[NUM_LED], reset_future[NUM_LED];
   for (int i = 0; i < NUM_LED; i++) {
@@ -338,7 +315,7 @@ TEST_F(LedControllerBlinkTest, ConcurrentlyBlinkLed) {
   EXPECT_LE(*reset_tick_minmax.second - *reset_tick_minmax.first, 10);
 }
 
-TEST_F(LedControllerBlinkTest, BlinkLedWhileOn) {
+TEST_F(LedControllerOnOffBlinkTest, BlinkLedWhileOn) {
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
       .Times(1);
@@ -353,7 +330,7 @@ TEST_F(LedControllerBlinkTest, BlinkLedWhileOn) {
   vTaskDelay(200);
 }
 
-TEST_F(LedControllerBlinkTest, TurnOnLedWhileBlinking) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOnLedWhileBlinking) {
   EXPECT_CALL(gpio_mock_,
               HAL_GPIO_WritePin(num_to_gpio_port[0], 0, GPIO_PIN_SET))
       .Times(1);
@@ -368,7 +345,7 @@ TEST_F(LedControllerBlinkTest, TurnOnLedWhileBlinking) {
   vTaskDelay(200);
 }
 
-TEST_F(LedControllerBlinkTest, TurnOffLedWhileBlinking) {
+TEST_F(LedControllerOnOffBlinkTest, TurnOffLedWhileBlinking) {
   std::promise<TickType_t> set_promise, reset_promise;
   std::future<TickType_t> set_future = set_promise.get_future(),
                           reset_future = reset_promise.get_future();

@@ -1,7 +1,7 @@
 /**
  * @file led_controller.h
  * @author QuantumSpawner jet22854111@gmail.com
- * @brief STM32 mcu module for controlling led, and uses freertos task to blink.
+ * @brief STM32 mcu module for controlling led.
  */
 
 #ifndef LED_CONTROLLER_H
@@ -15,11 +15,7 @@ extern "C" {
 #include <stdint.h>
 
 // stm32 include
-#if defined(STM32G431xx)
-#include "stm32g4xx_hal.h"
-#elif defined(STM32H723xx)
-#include "stm32h7xx_hal.h"
-#endif
+#include "stm32_module/stm32_hal.h"
 
 // freertos include
 #include "FreeRTOS.h"
@@ -28,22 +24,27 @@ extern "C" {
 #include "stm32_module/module_common.h"
 
 /* type ----------------------------------------------------------------------*/
+/// @brief Enumerator for state of led.
 typedef enum led_state {
-  LED_RESET = 0,
-  LED_OFF,
-  LED_ON,
-  LED_BLINKING,
+  LedReset = 0,
+  LedOff,
+  LedON,
+  LedBlinking,
 } LedState;
 
-typedef struct led_control_block {
+/// @brief Struct for led control block.
+struct led_cb {
   GPIO_TypeDef* led_port;
 
   uint16_t led_pin;
 
+  LedState state;
+
   volatile int ms_to_light;
 
-  LedState state;
-} LedControlBlock;
+  /// @brief List control block for tracking the list of leds.
+  struct list_cb led_list_cb;
+};
 
 /* class ---------------------------------------------------------------------*/
 /**
@@ -55,9 +56,7 @@ typedef struct led_controller {
   Task super_;
 
   // member variable
-  int num_led_;
-
-  LedControlBlock* led_control_block_;
+  List led_list_;
 
   StackType_t task_stack_[128];
 } LedController;
@@ -67,29 +66,25 @@ typedef struct led_controller {
  * @brief Constructor for LedController.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] num_led Number of led(s) to control by LedController.
- * @param[in] led_control_block_mem The memory address of the led control
- * block array. The array should be able to contain at least `led_num` of led
- * control block.
  * @return None.
  */
-void LedController_ctor(LedController* const self, const int num_led,
-                        LedControlBlock* const led_control_block_mem);
+void LedController_ctor(LedController* const self);
 
 /* member function -----------------------------------------------------------*/
 /**
- * @brief Function for initializing led control block for each led to controlby
- * this class.
+ * @brief Function for adding led to led controller.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] led_num The number of the led to initialize.
+ * @param[in,out] led_cb Led control block for the led.
  * @param[in] led_port The port of the led.
  * @param[in] led_pin The pin of the led.
- * @return None.
+ * @return ModuleRet Error code.
+ * @note User is resposible for allocating memory for led_cb.
  */
-void LedController_init_led(LedController* const self, const int led_num,
-                            GPIO_TypeDef* const led_port,
-                            const uint16_t led_pin);
+ModuleRet LedController_add_led(LedController* const self,
+                                struct led_cb* const led_cb,
+                                GPIO_TypeDef* const led_port,
+                                const uint16_t led_pin);
 
 /**
  * @brief Function to add led controller to freertos task. This function should
@@ -104,7 +99,8 @@ ModuleRet LedController_start(LedController* const self);
  * @brief Function for turning led on.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] led_num The number of led to turn on.
+ * @param[in] led_num The number of led to turn on, which is the order of adding
+ * led, starting from 0.
  * @return ModuleRet Error code.
  */
 ModuleRet LedController_turn_on(LedController* const self, const int led_num);
@@ -113,7 +109,8 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num);
  * @brief Function to turning led off.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] led_num The number of led to turn off.
+ * @param[in] led_num The number of led to turn off, which is the order of
+ * adding led, starting from 0.
  * @return ModuleRet Error code.
  */
 ModuleRet LedController_turn_off(LedController* const self, const int led_num);
@@ -122,7 +119,8 @@ ModuleRet LedController_turn_off(LedController* const self, const int led_num);
  * @brief Function for blinking led.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] led_num The number of led to blink.
+ * @param[in] led_num The number of led to blink, which is the order of addind
+ * led, starting from 0.
  * @param[in] period How long the led should blink in ms.
  * @return ModuleRet Error code.
  *

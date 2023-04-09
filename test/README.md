@@ -20,6 +20,8 @@ Note: Assertion of function parameter checking is not tested.
   - Transmit
   - Receive
   - ReceiveHighPriorityMessage
+- CanFrameTest
+  - AccessTest
 
 ### error_handler
 
@@ -36,19 +38,17 @@ Note: Assertion of function parameter checking is not tested.
 
 - LedControllerInitTest
   - LedControllerCtor
-  - LedControllerInitLed
 - LedControllerStartTest
   - TurnOnOffBlinkWileNotStarted
-  - PartiallyInitializedLed
-  - FullyInitializedLed
-- LedControllerOnOffTest
+  - StartLedController
+  - AddLedWhileStarted
+- LedControllerOnOffBlinkTest
   - TurnOnLed
   - TurnOnLedWhileOn
   - TurnOffLed
   - TurnOffLedWhileOff
   - TurnOffLedWhileOffAndIsOnBefore
   - RepetedlyTurnOnAndOffLed
-- LedControllerBlinkTest
   - BlinkLed
   - RepeatedlyBlinkLed
   - ConcurrentlyBlinkLed

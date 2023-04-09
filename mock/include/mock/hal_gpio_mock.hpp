@@ -6,11 +6,7 @@
 
 extern "C" {
 // stm32 include
-#if defined(STM32G431xx)
-#include "stm32g4xx_hal.h"
-#elif defined(STM32H723xx)
-#include "stm32h7xx_hal.h"
-#endif
+#include "stm32_module/stm32_hal.h"
 }
 
 // gtest include

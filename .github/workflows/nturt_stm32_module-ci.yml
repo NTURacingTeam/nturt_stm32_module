@@ -3,25 +3,52 @@ name: Build and test nturt_stm32_module
 on: [push]
 jobs:
 
-  Build:
+  Dependencies:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: sudo apt-get install -y gcc-multilib g++-multilib
+      run: |
+        sudo apt-get install -y --no-install-recommends \
+        gcc-multilib \
+        g++-multilib
 
     - name: Checkout
       uses: actions/checkout@v3
       with:
         submodules: recursive
 
+  Build and Test F446:
+    needs: Dependencies
     - name: Build
       run: |
-        mkdir build
-        cd build
-        cmake ..
-        make
+        cmake -DSTM32FAMILY=F4 -DSTM32TYPE=F446 -B build
+        cmake --build build -j$(nproc) --config Debug
 
     - name: Run tests
       run: |
         cd build/test
-        ctest
+        ctest -j$(nproc) --output-on-failure
+
+  Build and Test G431:
+    needs: Dependencies
+    - name: Build
+      run: |
+        cmake -DSTM32FAMILY=G4 -DSTM32TYPE=G431 -B build
+        cmake --build build -j$(nproc) --config Debug
+
+    - name: Run tests
+      run: |
+        cd build/test
+        ctest -j$(nproc) --output-on-failure
+
+  Build and Test H723:
+    needs: Dependencies
+    - name: Build
+      run: |
+        cmake -DSTM32FAMILY=H7 -DSTM32TYPE=H723 -B build
+        cmake --build build -j$(nproc) --config Debug
+
+    - name: Run tests
+      run: |
+        cd build/test
+        ctest -j$(nproc) --output-on-failure

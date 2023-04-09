@@ -4,11 +4,7 @@
 #include <stdint.h>
 
 // stm32 include
-#if defined(STM32G431xx)
-#include "stm32g4xx_hal.h"
-#elif defined(STM32H723xx)
-#include "stm32h7xx_hal.h"
-#endif
+#include "stm32_module/stm32_hal.h"
 
 // freertos include
 #include "FreeRTOS.h"
@@ -28,14 +24,9 @@ ModuleRet __ErrorHandler_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ErrorHandler* const self = (ErrorHandler*)_self;
-  if (self->super_.state_ == TaskRunning) {
-    return ModuleBusy;
-  }
-
-  Task_create_freertos_task((Task*)self, "error_handler", TaskPriorityRealtime,
-                            self->task_stack_,
-                            sizeof(self->task_stack_) / sizeof(StackType_t));
-  return ModuleOK;
+  return Task_create_freertos_task(
+      (Task*)self, "error_handler", TaskPriorityRealtime, self->task_stack_,
+      sizeof(self->task_stack_) / sizeof(StackType_t));
 }
 
 /* constructor ---------------------------------------------------------------*/

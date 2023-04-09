@@ -24,14 +24,22 @@ endfunction()
 ################################################################################
 enable_testing()
 
+add_gtest(button_monitor_test
+        button_monitor_test.cpp
+)
+
 add_gtest(can_transceiver_test
         can_transceiver_test.cpp
+)
+
+add_gtest(error_handler_test
+        error_handler_test.cpp
 )
 
 add_gtest(led_controller_test
         led_controller_test.cpp
 )
 
-add_gtest(error_handler_test
-        error_handler_test.cpp
+add_gtest(module_common_test
+        module_common_test.cpp
 )

@@ -16,7 +16,7 @@ typedef struct test_can {
 } TestCan;
 
 /* constructor ---------------------------------------------------------------*/
-void TestCan_ctor(TestCan* self);
+void TestCan_ctor(TestCan* self, CanHandle* const can_handle);
 
 /* member function -----------------------------------------------------------*/
 ModuleRet TestCan_configure(TestCan* const self);

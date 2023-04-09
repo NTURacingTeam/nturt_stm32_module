@@ -16,11 +16,7 @@ extern "C" {
 #include <stdint.h>
 
 // stm32 include
-#if defined(STM32G431xx)
-#include "stm32g4xx_hal.h"
-#elif defined(STM32H723xx)
-#include "stm32h7xx_hal.h"
-#endif
+#include "stm32_module/stm32_hal.h"
 
 // freertos include
 #include "FreeRTOS.h"
@@ -33,7 +29,15 @@ extern "C" {
 // assert macro
 #define IS_DLC(DLC) ((DLC) <= 8U)
 
+/* type ----------------------------------------------------------------------*/
+#if defined(HAL_CAN_MODULE_ENABLED)
+typedef CAN_HandleTypeDef CanHandle;
+#elif defined(HAL_FDCAN_MODULE_ENABLED)
+typedef FDCAN_HandleTypeDef CanHandle;
+#endif
+
 /* abstract class inherited from Task ----------------------------------------*/
+// forward declaration
 struct CanTransceiverVtbl;
 
 /**
@@ -48,9 +52,12 @@ typedef struct can_transceiver {
   struct CanTransceiverVtbl* vptr_;
 
   // member variable
-  FDCAN_HandleTypeDef* can_handle_;
+  CanHandle* can_handle_;
 
   StackType_t task_stack_[256];
+
+  /// @brief List control block for tracking the list of can transceivers.
+  struct list_cb can_transceiver_list_cb;
 } CanTransceiver;
 
 /// @brief Virtual table for CanTransceiver class.
@@ -75,7 +82,7 @@ struct CanTransceiverVtbl {
  * @return None.
  */
 void CanTransceiver_ctor(CanTransceiver* const self,
-                         FDCAN_HandleTypeDef* const can_handle);
+                         CanHandle* const can_handle);
 
 /* member function -----------------------------------------------------------*/
 /**

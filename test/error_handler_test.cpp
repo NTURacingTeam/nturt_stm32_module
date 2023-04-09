@@ -14,8 +14,10 @@ extern "C" {
 #include "mock/freertos_mock.hpp"
 #include "mock/mock_common.hpp"
 
+using ::testing::Invoke;
 using ::testing::Return;
 using ::testing::Test;
+using ::testing::WithArg;
 
 /* error handler initialization test -----------------------------------------*/
 TEST(ErrorHandlerInitTest, ErrorHandlerCtor) {
@@ -44,9 +46,12 @@ TEST_F(ErrorHandlerStartTest, AccessErrorWhileNotStarted) {
 }
 
 TEST_F(ErrorHandlerStartTest, ErrorHandlerStart) {
-  EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(1);
+  EXPECT_CALL(freertos_mock_, xTaskCreateStatic)
+      .WillOnce(
+          WithArg<6>(Invoke([](StaticTask_t* t) { return (TaskHandle_t)t; })));
 
   EXPECT_EQ(ErrorHandler_start(&error_handler_), ModuleOK);
+  EXPECT_EQ(error_handler_.super_.state_, TaskRunning);
 }
 
 /* error handler access error test -------------------------------------------*/
@@ -57,7 +62,7 @@ class ErrorHandlerAccessErrorTest : public Test {
     ErrorHandler_start(&error_handler_);
   }
 
-  void TearDown() override { vTaskDelete(error_handler_.super_.task_handle_); }
+  void TearDown() override { Task_delete((Task*)&error_handler_); }
 
   ErrorHandler error_handler_;
 };
