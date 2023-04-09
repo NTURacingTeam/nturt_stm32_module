@@ -19,6 +19,7 @@ jobs:
 
   Build and Test F446:
     needs: Dependencies
+    steps:
     - name: Build
       run: |
         cmake -DSTM32FAMILY=F4 -DSTM32TYPE=F446 -B build
@@ -31,6 +32,7 @@ jobs:
 
   Build and Test G431:
     needs: Dependencies
+    steps:
     - name: Build
       run: |
         cmake -DSTM32FAMILY=G4 -DSTM32TYPE=G431 -B build
@@ -43,6 +45,7 @@ jobs:
 
   Build and Test H723:
     needs: Dependencies
+    steps:
     - name: Build
       run: |
         cmake -DSTM32FAMILY=H7 -DSTM32TYPE=H723 -B build
