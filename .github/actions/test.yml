@@ -1,0 +1,10 @@
+name: Tests
+description: Run tests
+
+runs:
+  using: composite
+  steps:
+  - name: Run tests
+    run: |
+      cd build/test
+      ctest -j$(nproc) --output-on-failure

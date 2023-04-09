@@ -2,59 +2,44 @@ name: Build and test nturt_stm32_module
 
 on: [push]
 jobs:
-
-  Dependencies:
+  F446:
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
-      run: |
-        sudo apt-get install -y --no-install-recommends \
-        gcc-multilib \
-        g++-multilib
+      uses: ./.github/actions/dependencise
 
-    - name: Checkout
-      uses: actions/checkout@v3
-      with:
-        submodules: recursive
-
-  Build_and_test_F446:
-    runs-on: ubuntu-latest
-    needs: Dependencies
-    steps:
     - name: Build
       run: |
         cmake -DSTM32FAMILY=F4 -DSTM32TYPE=F446 -B build
         cmake --build build -j$(nproc) --config Debug
 
     - name: Run tests
-      run: |
-        cd build/test
-        ctest -j$(nproc) --output-on-failure
+      uses: ./.github/actions/test
 
-  Build_and_test_G431:
+  G431:
     runs-on: ubuntu-latest
-    needs: Dependencies
     steps:
+    - name: Install dependencies
+      uses: ./.github/actions/dependencise
+
     - name: Build
       run: |
         cmake -DSTM32FAMILY=G4 -DSTM32TYPE=G431 -B build
         cmake --build build -j$(nproc) --config Debug
 
     - name: Run tests
-      run: |
-        cd build/test
-        ctest -j$(nproc) --output-on-failure
+      uses: ./.github/actions/test
 
-  Build_and_test_H723:
+  H723:
     runs-on: ubuntu-latest
-    needs: Dependencies
     steps:
+    - name: Install dependencies
+      uses: ./.github/actions/dependencise
+
     - name: Build
       run: |
         cmake -DSTM32FAMILY=H7 -DSTM32TYPE=H723 -B build
         cmake --build build -j$(nproc) --config Debug
 
     - name: Run tests
-      run: |
-        cd build/test
-        ctest -j$(nproc) --output-on-failure
+      uses: ./.github/actions/test
