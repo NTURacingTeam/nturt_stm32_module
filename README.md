@@ -1,6 +1,6 @@
 # nturt_stm32_module
 
-![build and test status](https://github.com/NTURacingTeam/nturt_stm32_module/actions/workflows/nturt_stm32_module-ci.yml/badge.svg)
+![build and test status](https://github.com/NTURacingTeam/nturt_stm32_module/actions/workflows/nturt_stm32_module-ci.yaml/badge.svg)
 
 Modules designed for use in stm32 microcontrollers written in object-oriented style c.
 
