@@ -9,3 +9,4 @@ runs:
         sudo apt-get install -y --no-install-recommends \
         gcc-multilib \
         g++-multilib
+      shell: bash

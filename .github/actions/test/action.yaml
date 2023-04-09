@@ -8,3 +8,4 @@ runs:
     run: |
       cd build/test
       ctest -j$(nproc) --output-on-failure
+    shell: bash
