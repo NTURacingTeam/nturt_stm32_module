@@ -20,6 +20,117 @@ using ::testing::Invoke;
 using ::testing::Test;
 using ::testing::WithArg;
 
+/* test parameters -----------------------------------------------------------*/
+#define NUM_LIST_ITEM 10
+#define REPEATED_TEST_TIMES 10
+
+/* list initialization test --------------------------------------------------*/
+TEST(ListInitTest, ListCtor) {
+  List list;
+
+  List_ctor(&list);
+
+  // really nothing to test
+}
+
+/* list not item test --------------------------------------------------------*/
+class ListNoItemTest : public Test {
+ protected:
+  void SetUp() override { List_ctor(&list_); }
+
+  List list_;
+};
+
+TEST_F(ListNoItemTest, Size) { EXPECT_EQ(List_size(&list_), 0); }
+
+TEST_F(ListNoItemTest, At) { EXPECT_EQ(List_at(&list_, 0), nullptr); }
+
+/* list push back test -------------------------------------------------------*/
+class ListPushBackTest : public Test {
+ protected:
+  void SetUp() override {
+    List_ctor(&list_);
+    for (int i = 0; i < NUM_LIST_ITEM; i++) {
+      List_push_back(&list_, &list_cb_[i], (void*)i);
+    }
+  }
+
+  List list_;
+
+  struct list_cb list_cb_[NUM_LIST_ITEM];
+};
+
+TEST_F(ListPushBackTest, Size) { EXPECT_EQ(List_size(&list_), NUM_LIST_ITEM); }
+
+TEST_F(ListPushBackTest, At) {
+  for (int i = 0; i < NUM_LIST_ITEM; i++) {
+    EXPECT_EQ(List_at(&list_, i), (void*)i);
+  }
+}
+
+TEST_F(ListPushBackTest, OutOfRangeAt) {
+  for (int i = 0; i < REPEATED_TEST_TIMES; i++) {
+    EXPECT_EQ(List_at(&list_, NUM_LIST_ITEM + i), nullptr);
+  }
+}
+
+/* list iterator initialization test -----------------------------------------*/
+TEST(ListItorTest, ListItorCtor) {
+  List list;
+  ListIter list_iter;
+
+  ListIter_ctor(&list_iter, &list);
+
+  EXPECT_EQ(list_iter.index_, list.head_);
+}
+
+/* List iterator test --------------------------------------------------------*/
+class ListIterTest : public Test {
+ protected:
+  void SetUp() override {
+    List_ctor(&list_);
+    for (int i = 0; i < NUM_LIST_ITEM; i++) {
+      List_push_back(&list_, &list_cb_[i], (void*)i);
+    }
+
+    ListIter_ctor(&list_iter_, &list_);
+  }
+
+  List list_;
+
+  struct list_cb list_cb_[NUM_LIST_ITEM];
+
+  ListIter list_iter_;
+};
+
+TEST_F(ListIterTest, Next) {
+  for (int i = 0; i < NUM_LIST_ITEM; i++) {
+    EXPECT_EQ(ListIter_next(&list_iter_), (void*)i);
+  }
+}
+
+TEST_F(ListIterTest, OutOfRangeNext) {
+  for (int i = 0; i < NUM_LIST_ITEM; i++) {
+    EXPECT_EQ(ListIter_next(&list_iter_), (void*)i);
+  }
+
+  for (int i = 0; i < REPEATED_TEST_TIMES; i++) {
+    EXPECT_EQ(ListIter_next(&list_iter_), nullptr);
+  }
+}
+
+TEST_F(ListIterTest, CtorReset) {
+  for (int i = 0; i < NUM_LIST_ITEM; i++) {
+    EXPECT_EQ(ListIter_next(&list_iter_), (void*)i);
+  }
+
+  ListIter_ctor(&list_iter_, &list_);
+  for (int i = 0; i < NUM_LIST_ITEM; i++) {
+    EXPECT_EQ(ListIter_next(&list_iter_), (void*)i);
+  }
+}
+
+/* task initialization test --------------------------------------------------*/
 TEST(TaskInitTest, TaskCtor) {
   Task task;
   // fake task_code function pointer
@@ -30,6 +141,7 @@ TEST(TaskInitTest, TaskCtor) {
   EXPECT_EQ(task.task_code_, task_code);
 }
 
+/* task test -----------------------------------------------------------------*/
 class TaskTest : public Test {
  protected:
   void SetUp() override { Task_ctor(&task_, task_code_); }

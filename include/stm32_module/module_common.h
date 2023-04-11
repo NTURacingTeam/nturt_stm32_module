@@ -107,7 +107,15 @@ void List_ctor(List* const self);
 
 /* member function -----------------------------------------------------------*/
 /**
- * @brief Function to add an element to the end of the list.
+ * @brief Function to get the size of the list.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return int The size of the list.
+ */
+int List_size(List* const self);
+
+/**
+ * @brief Function to add an item to the end of the list.
  *
  * @param[in,out] self The instance of the class.
  * @param[in,out] list_cb Control block for the list data.
@@ -134,7 +142,7 @@ void* List_at(List* const self, const int index);
  * @brief Class for iteratoring through list.
  *
  */
-typedef struct list_itor {
+typedef struct list_iter {
   struct list_cb* volatile index_;
 } ListIter;
 

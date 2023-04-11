@@ -77,29 +77,49 @@ ModuleRet __CanTransceiver_start(Task* const _self) {
 }
 
 // default to do nothing
-ModuleRet __CanTransceiver_configure(CanTransceiver* const /*self*/) {}
-
-// pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_receive(CanTransceiver* const /*self*/,
-                                   const bool /*is_extended*/,
-                                   const uint32_t /*id*/, const uint8_t /*dlc*/,
-                                   const uint8_t* const /*data*/) {
-  module_assert(0);
+ModuleRet __CanTransceiver_configure(CanTransceiver* const self) {
+  (void)self;
+  return ModuleOK;
 }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_receive_hp(CanTransceiver* const /*self*/,
-                                      const bool /*is_extended*/,
-                                      const uint32_t /*id*/,
-                                      const uint8_t /*dlc*/,
-                                      const uint8_t* const /*data*/) {
+ModuleRet __CanTransceiver_receive(CanTransceiver* const self,
+                                   const bool is_extended, const uint32_t id,
+                                   const uint8_t dlc,
+                                   const uint8_t* const data) {
+  (void)self;
+  (void)is_extended;
+  (void)id;
+  (void)dlc;
+  (void)data;
+
   module_assert(0);
+  return ModuleError;
 }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_periodic_update(CanTransceiver* const /*self*/,
-                                           const TickType_t /*current_tick*/) {
+ModuleRet __CanTransceiver_receive_hp(CanTransceiver* const self,
+                                      const bool is_extended, const uint32_t id,
+                                      const uint8_t dlc,
+                                      const uint8_t* const data) {
+  (void)self;
+  (void)is_extended;
+  (void)id;
+  (void)dlc;
+  (void)data;
+
   module_assert(0);
+  return ModuleError;
+}
+
+// pure virtual function for CanTransceiver base class
+ModuleRet __CanTransceiver_periodic_update(CanTransceiver* const self,
+                                           const TickType_t current_tick) {
+  (void)self;
+  (void)current_tick;
+
+  module_assert(0);
+  return ModuleError;
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -247,8 +267,9 @@ void CanFrame_end_access(CanFrame* const self) {
 
 /* static and callback function ----------------------------------------------*/
 // freertos deferred interrupt handler for receiving high priority can message
-static void received_hp_deferred(void* const _self,
-                                 const uint32_t /*argument*/) {
+static void received_hp_deferred(void* const _self, const uint32_t argument) {
+  (void)argument;
+
   CanTransceiver* const self = (CanTransceiver*)_self;
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header;

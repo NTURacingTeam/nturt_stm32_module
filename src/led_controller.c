@@ -76,13 +76,12 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
     return ModuleError;
   }
 
-  taskENTER_CRITICAL();
-  struct led_cb* led_cb = (struct led_cb*)List_at(&self->led_list_, led_num);
-  if (led_cb == NULL) {
-    taskEXIT_CRITICAL();
+  if (List_size(&self->led_list_) <= led_num) {
     return ModuleError;
   }
 
+  taskENTER_CRITICAL();
+  struct led_cb* led_cb = (struct led_cb*)List_at(&self->led_list_, led_num);
   if (led_cb->state != LedON) {
     if (led_cb->state == LedOff) {
       HAL_GPIO_WritePin(led_cb->led_port, led_cb->led_pin, GPIO_PIN_SET);
@@ -102,13 +101,12 @@ ModuleRet LedController_turn_off(LedController* const self, const int led_num) {
     return ModuleError;
   }
 
-  taskENTER_CRITICAL();
-  struct led_cb* led_cb = (struct led_cb*)List_at(&self->led_list_, led_num);
-  if (led_cb == NULL) {
-    taskEXIT_CRITICAL();
+  if (List_size(&self->led_list_) <= led_num) {
     return ModuleError;
   }
 
+  taskENTER_CRITICAL();
+  struct led_cb* led_cb = (struct led_cb*)List_at(&self->led_list_, led_num);
   if (led_cb->state != LedOff) {
     led_cb->ms_to_light = 0;
     HAL_GPIO_WritePin(led_cb->led_port, led_cb->led_pin, GPIO_PIN_RESET);
@@ -128,12 +126,13 @@ ModuleRet LedController_blink(LedController* const self, const int led_num,
     return ModuleError;
   }
 
+  if (List_size(&self->led_list_) <= led_num) {
+    return ModuleError;
+  }
+
   taskENTER_CRITICAL();
   struct led_cb* led_cb = (struct led_cb*)List_at(&self->led_list_, led_num);
-  if (led_cb == NULL) {
-    taskEXIT_CRITICAL();
-    return ModuleError;
-  } else if (led_cb->state == LedON) {
+  if (led_cb->state == LedON) {
     taskEXIT_CRITICAL();
     return ModuleBusy;
   }

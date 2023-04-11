@@ -28,6 +28,8 @@ void List_ctor(List *const self) {
 }
 
 /* member function -----------------------------------------------------------*/
+int List_size(List *const self) { return self->size_; }
+
 void List_push_back(List *const self, struct list_cb *const list_cb,
                     void *const data) {
   module_assert(IS_NOT_NULL(self));
@@ -94,7 +96,12 @@ inline ModuleRet Task_start(Task *const self) {
 
 /* virtual function definition -----------------------------------------------*/
 // pure virtual function for Task base class
-ModuleRet __Task_start(Task *const /*self*/) { module_assert(0); }
+ModuleRet __Task_start(Task *const self) {
+  (void)self;
+
+  module_assert(0);
+  return ModuleError;
+}
 
 /* constructor ---------------------------------------------------------------*/
 void Task_ctor(Task *const self, TaskFunction_t task_code) {
