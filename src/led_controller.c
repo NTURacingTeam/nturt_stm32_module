@@ -76,7 +76,7 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
     return ModuleError;
   }
 
-  if (List_size(&self->led_list_) <= led_num) {
+  if (led_num >= List_size(&self->led_list_)) {
     return ModuleError;
   }
 

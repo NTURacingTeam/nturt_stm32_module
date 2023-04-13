@@ -1,5 +1,8 @@
 #include "mock/hal_can_mock.hpp"
 
+// stl include
+#include <cstdint>
+
 extern "C" {
 // stm32 include
 #include "stm32_module/stm32_hal.h"

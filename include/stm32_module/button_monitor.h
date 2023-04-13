@@ -59,6 +59,14 @@ void ButtonMonitor_ctor(ButtonMonitor* const self);
 
 /* member function -----------------------------------------------------------*/
 /**
+ * @brief Function to add button monitor to freertos task.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return ModuleRet Error code.
+ */
+ModuleRet ButtonMonitor_start(ButtonMonitor* const self);
+
+/**
  * @brief Function for adding button to mutton monitor.
  *
  * @param[in,out] self The instance of the class.

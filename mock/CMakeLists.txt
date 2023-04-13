@@ -8,6 +8,7 @@ add_library(mock
     src/freertos_mock.cpp
     src/hal_can_mock.cpp
     src/hal_gpio_mock.cpp
+    src/hal_timer_mock.cpp
     src/mock_common.cpp
 )
 target_include_directories(mock PUBLIC

@@ -78,14 +78,13 @@ ModuleRet ButtonMonitor_read_state(ButtonMonitor* const self,
     return ModuleError;
   }
 
-  taskENTER_CRITICAL();
-  struct button_cb* button_cb =
-      (struct button_cb*)List_at(&self->button_list_, button_num);
-  if (button_cb == NULL) {
-    taskEXIT_CRITICAL();
+  if (button_num >= List_size(&self->button_list_)) {
     return ModuleError;
   }
 
+  taskENTER_CRITICAL();
+  struct button_cb* button_cb =
+      (struct button_cb*)List_at(&self->button_list_, button_num);
   *state = button_cb->state;
   taskEXIT_CRITICAL();
 
@@ -94,7 +93,6 @@ ModuleRet ButtonMonitor_read_state(ButtonMonitor* const self,
 
 void ButtonMonitor_task_code(void* const _self) {
   ButtonMonitor* const self = (ButtonMonitor*)_self;
-  struct button_cb* button_cb;
 
   while (1) {
     ListIter button_iter;

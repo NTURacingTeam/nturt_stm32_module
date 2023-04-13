@@ -9,8 +9,10 @@
 #include "task.h"
 
 /* function ------------------------------------------------------------------*/
-void __module_assert_fail(const char *assertion, const char *file,
-                          unsigned int line, const char *function) {
+__attribute__((weak)) void __module_assert_fail(const char *assertion,
+                                                const char *file,
+                                                unsigned int line,
+                                                const char *function) {
   (void)assertion;
   (void)file;
   (void)line;

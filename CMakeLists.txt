@@ -47,6 +47,7 @@ add_library(stm32_module SHARED
     src/error_handler.c
     src/led_controller.c
     src/module_common.c
+    src/servo_controller.c
 )
 target_include_directories(stm32_module
     PUBLIC include
