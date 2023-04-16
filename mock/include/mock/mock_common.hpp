@@ -49,7 +49,8 @@ class CArrayMatcher : public MatcherInterface<T> {
   explicit CArrayMatcher(T expected_array, int array_length)
       : expected_array_(expected_array), array_length_(array_length) {}
 
-  bool MatchAndExplain(T array, MatchResultListener *listener) const override {
+  bool MatchAndExplain(T array,
+                       MatchResultListener * /*listener*/) const override {
     return std::memcmp(array, expected_array_,
                        sizeof(expected_array_[0]) * array_length_) == 0;
   }

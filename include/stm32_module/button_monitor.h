@@ -21,6 +21,8 @@ extern "C" {
 #include "stm32_module/module_common.h"
 
 /* macro ---------------------------------------------------------------------*/
+// parmeter
+#define BUTTON_MONITOR_TASK_PERIOD 2
 #define BUTTON_DEBOUNCE_TIMES 5
 
 /* type ----------------------------------------------------------------------*/

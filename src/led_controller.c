@@ -74,9 +74,7 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
 
   if (self->super_.state_ != TaskRunning) {
     return ModuleError;
-  }
-
-  if (led_num >= List_size(&self->led_list_)) {
+  } else if (led_num >= List_size(&self->led_list_)) {
     return ModuleError;
   }
 
@@ -99,9 +97,7 @@ ModuleRet LedController_turn_off(LedController* const self, const int led_num) {
 
   if (self->super_.state_ != TaskRunning) {
     return ModuleError;
-  }
-
-  if (List_size(&self->led_list_) <= led_num) {
+  } else if (List_size(&self->led_list_) <= led_num) {
     return ModuleError;
   }
 
@@ -124,9 +120,7 @@ ModuleRet LedController_blink(LedController* const self, const int led_num,
 
   if (self->super_.state_ != TaskRunning) {
     return ModuleError;
-  }
-
-  if (List_size(&self->led_list_) <= led_num) {
+  } else if (List_size(&self->led_list_) <= led_num) {
     return ModuleError;
   }
 
@@ -174,6 +168,6 @@ void LedController_task_code(void* _self) {
     }
     taskEXIT_CRITICAL();
 
-    vTaskDelayUntil(&last_wake, 10);
+    vTaskDelayUntil(&last_wake, LED_CONTROLLER_TASK_PERIOD);
   }
 }

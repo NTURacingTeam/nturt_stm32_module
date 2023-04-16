@@ -17,18 +17,31 @@ extern "C" {
 /* macro ---------------------------------------------------------------------*/
 #define TIMER_PRESCALER 50000
 
+// parameter
+#define SERVO_CONTROLLER_TASK_PERIOD 10
+#define SERVO_ACCELERATE_SLOPE 0.02F
+
+// servo direction
+#define SERVO_CLOCKWISE -1
+#define SERVO_COUNTER_CLOCKWISE 1
+
 // assert macro
-#define IS_SERVO_VALUE(VAL) (((VAL) >= -1.0) && ((VAL) <= 1.0))
-#define IS_PWM_CHANNEL(VAL)                                \
-  (((VAL) == TIM_CHANNEL_1) || ((VAL) == TIM_CHANNEL_2) || \
-   ((VAL) == TIM_CHANNEL_3) || ((VAL) == TIM_CHANNEL_4))
+#define IS_SERVO_DUTY(VAL) (((VAL) >= 0.0) && ((VAL) <= 1.0))
+#define IS_SERVO_DIRECTION(VAL) \
+  (((VAL) == SERVO_CLOCKWISE) || ((VAL) == SERVO_COUNTER_CLOCKWISE))
 
 /* type ----------------------------------------------------------------------*/
+
 struct servo_cb {
-  /// @brief Pointer to the timer capture / compare register. When timer counter
-  /// value is greater than this register value, the output signal is high, or
-  /// low otherwise.
-  uint32_t* CCR;
+  TIM_HandleTypeDef* timer;
+
+  uint32_t channel;
+
+  int direction;
+
+  float current_duty;
+
+  float target_duty;
 
   /// @brief List control block for tracking the list of servos.
   struct list_cb servo_list_cb;
@@ -46,8 +59,13 @@ struct servo_cb {
  * \f$\text{prescaler}=0.4\times\text{timer clock in MHz}\f$
  */
 typedef struct servo_controller {
+  // inherited class
+  Task super_;
+
   // member variable
   List servo_list_;
+
+  StackType_t task_stack_[128];
 } ServoController;
 
 /* constructor ---------------------------------------------------------------*/
@@ -76,15 +94,45 @@ ModuleRet ServoController_add_servo(ServoController* const self,
                                     const uint32_t channel);
 
 /**
- * @brief Function for setting the servo value.
+ * @brief Function to add servo controller to freertos task. This function
+ * should only be called after all servos are added.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] servo_num Number of the servo to set value.
- * @param[in] value The value to set the servo to in [-1, 1].
  * @return ModuleRet Error code.
  */
-ModuleRet ServoController_set(ServoController* const self, const int servo_num,
-                              const float value);
+ModuleRet ServoController_start(ServoController* const self);
+
+/**
+ * @briefFunction for setting the direction of the servo.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] servo_num Number of the servo to set direction.
+ * @param[in] direction The direction to set the servo to.
+ * @return ModuleRet Error code.
+ */
+ModuleRet ServoController_set_direction(ServoController* const self,
+                                        const int servo_num,
+                                        const int direction);
+
+/**
+ * @brief Function for setting the servo duty.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] servo_num Number of the servo to set duty.
+ * @param[in] duty The duty to set the servo to in [0, 1].
+ * @return ModuleRet Error code.
+ */
+ModuleRet ServoController_set_duty(ServoController* const self,
+                                   const int servo_num, const float duty);
+
+/**
+ * @brief Function to run in freertos task.
+ *
+ * @param[in,out] _self The instance of the class.
+ * @return None.
+ * @warning For internal use only.
+ */
+void ServoController_task_code(void* const _self);
 
 #ifdef __cplusplus
 }

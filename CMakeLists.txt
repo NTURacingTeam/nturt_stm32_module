@@ -8,6 +8,9 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 
+# enable warnings
+add_compile_options(-Wall -Wextra)
+
 # compile in 32-bit since the driver of stm32 is designed and written in 32-bit,
 # compiling in 64-bit will result in compilation error
 add_compile_options(-m32)

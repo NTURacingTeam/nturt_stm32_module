@@ -23,6 +23,10 @@ extern "C" {
 // stm32_module include
 #include "stm32_module/module_common.h"
 
+/* macro ---------------------------------------------------------------------*/
+// parameter
+#define LED_CONTROLLER_TASK_PERIOD 10
+
 /* type ----------------------------------------------------------------------*/
 /// @brief Enumerator for state of led.
 typedef enum led_state {
@@ -88,7 +92,7 @@ ModuleRet LedController_add_led(LedController* const self,
 
 /**
  * @brief Function to add led controller to freertos task. This function should
- * only be called after all leds are initialized.
+ * only be called after all leds are added.
  *
  * @param[in,out] self The instance of the class.
  * @return ModuleRet Error code.

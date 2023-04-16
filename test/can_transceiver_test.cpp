@@ -173,6 +173,7 @@ TEST_F(CanTransceiverTransceiveTest, Receive) {
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header = {
       .StdId = 0x123,
+      .ExtId = 0,
       .IDE = CAN_ID_STD,
       .RTR = CAN_RTR_DATA,
       .DLC = 8,
@@ -196,6 +197,7 @@ TEST_F(CanTransceiverTransceiveTest, Receive) {
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
       .BitRateSwitch = FDCAN_BRS_OFF,
       .FDFormat = FDCAN_CLASSIC_CAN,
+      .RxTimestamp = 0,
       .FilterIndex = 0,
       .IsFilterMatchingFrame = 0,
   };
@@ -223,6 +225,7 @@ TEST_F(CanTransceiverTransceiveTest, ReceiveHighPriorityMessage) {
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header = {
       .StdId = 0x123,
+      .ExtId = 0,
       .IDE = CAN_ID_STD,
       .RTR = CAN_RTR_DATA,
       .DLC = 8,
@@ -244,6 +247,7 @@ TEST_F(CanTransceiverTransceiveTest, ReceiveHighPriorityMessage) {
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
       .BitRateSwitch = FDCAN_BRS_OFF,
       .FDFormat = FDCAN_CLASSIC_CAN,
+      .RxTimestamp = 0,
       .FilterIndex = 0,
       .IsFilterMatchingFrame = 0,
   };
@@ -335,6 +339,7 @@ TEST_F(MultiCanTransceiver, Receive) {
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header = {
       .StdId = 0x123,
+      .ExtId = 0,
       .IDE = CAN_ID_STD,
       .RTR = CAN_RTR_DATA,
       .DLC = 8,
@@ -350,6 +355,7 @@ TEST_F(MultiCanTransceiver, Receive) {
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
       .BitRateSwitch = FDCAN_BRS_OFF,
       .FDFormat = FDCAN_CLASSIC_CAN,
+      .RxTimestamp = 0,
       .FilterIndex = 0,
       .IsFilterMatchingFrame = 0,
   };
@@ -389,6 +395,7 @@ TEST_F(MultiCanTransceiver, ReceiveHighPriorityMessage) {
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header = {
       .StdId = 0x123,
+      .ExtId = 0,
       .IDE = CAN_ID_STD,
       .RTR = CAN_RTR_DATA,
       .DLC = 8,
@@ -404,6 +411,7 @@ TEST_F(MultiCanTransceiver, ReceiveHighPriorityMessage) {
       .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
       .BitRateSwitch = FDCAN_BRS_OFF,
       .FDFormat = FDCAN_CLASSIC_CAN,
+      .RxTimestamp = 0,
       .FilterIndex = 0,
       .IsFilterMatchingFrame = 0,
   };

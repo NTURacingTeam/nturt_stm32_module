@@ -211,7 +211,7 @@ void CanTransceiver_task_code(void* const _self) {
 #if defined(HAL_CAN_MODULE_ENABLED)
     uint32_t fifo_level =
         HAL_CAN_GetRxFifoFillLevel(self->can_handle_, CAN_RX_FIFO0);
-    for (int i = 0; i < fifo_level; i++) {
+    for (uint32_t i = 0; i < fifo_level; i++) {
       CAN_RxHeaderTypeDef rx_header;
       uint8_t rx_data[8];
       HAL_CAN_GetRxMessage(self->can_handle_, CAN_RX_FIFO0, &rx_header,
@@ -224,7 +224,7 @@ void CanTransceiver_task_code(void* const _self) {
 #elif defined(HAL_FDCAN_MODULE_ENABLED)
     uint32_t fifo_level =
         HAL_FDCAN_GetRxFifoFillLevel(self->can_handle_, FDCAN_RX_FIFO0);
-    for (int i = 0; i < fifo_level; i++) {
+    for (uint32_t i = 0; i < fifo_level; i++) {
       FDCAN_RxHeaderTypeDef rx_header;
       uint8_t rx_data[8];
       HAL_FDCAN_GetRxMessage(self->can_handle_, FDCAN_RX_FIFO0, &rx_header,

@@ -76,9 +76,7 @@ ModuleRet ButtonMonitor_read_state(ButtonMonitor* const self,
 
   if (self->super_.state_ != TaskRunning) {
     return ModuleError;
-  }
-
-  if (button_num >= List_size(&self->button_list_)) {
+  } else if (button_num >= List_size(&self->button_list_)) {
     return ModuleError;
   }
 
@@ -93,6 +91,7 @@ ModuleRet ButtonMonitor_read_state(ButtonMonitor* const self,
 
 void ButtonMonitor_task_code(void* const _self) {
   ButtonMonitor* const self = (ButtonMonitor*)_self;
+  TickType_t last_wake = xTaskGetTickCount();
 
   while (1) {
     ListIter button_iter;
@@ -119,6 +118,6 @@ void ButtonMonitor_task_code(void* const _self) {
     }
     taskEXIT_CRITICAL();
 
-    vTaskDelay(2);
+    vTaskDelayUntil(&last_wake, BUTTON_MONITOR_TASK_PERIOD);
   }
 }
