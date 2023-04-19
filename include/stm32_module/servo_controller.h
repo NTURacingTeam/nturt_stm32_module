@@ -15,10 +15,10 @@ extern "C" {
 #include "stm32_module/module_common.h"
 
 /* macro ---------------------------------------------------------------------*/
-#define TIMER_PRESCALER 50000
-
 // parameter
+#define SERVO_CONTROLLER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define SERVO_CONTROLLER_TASK_PERIOD 10
+#define SERVO_TIMER_PRESCALER 50000
 #define SERVO_ACCELERATE_SLOPE 0.02F
 
 // servo direction
@@ -31,7 +31,7 @@ extern "C" {
   (((VAL) == SERVO_CLOCKWISE) || ((VAL) == SERVO_COUNTER_CLOCKWISE))
 
 /* type ----------------------------------------------------------------------*/
-
+/// @brief Struct for servo control block.
 struct servo_cb {
   TIM_HandleTypeDef* timer;
 
@@ -65,7 +65,7 @@ typedef struct servo_controller {
   // member variable
   List servo_list_;
 
-  StackType_t task_stack_[128];
+  StackType_t task_stack_[SERVO_CONTROLLER_TASK_STACK_SIZE];
 } ServoController;
 
 /* constructor ---------------------------------------------------------------*/
@@ -106,7 +106,8 @@ ModuleRet ServoController_start(ServoController* const self);
  * @briefFunction for setting the direction of the servo.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] servo_num Number of the servo to set direction.
+ * @param[in] servo_num Number of the servo to set direction, which is the
+ * order of adding servo, starting from 0.
  * @param[in] direction The direction to set the servo to.
  * @return ModuleRet Error code.
  */
@@ -118,7 +119,8 @@ ModuleRet ServoController_set_direction(ServoController* const self,
  * @brief Function for setting the servo duty.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] servo_num Number of the servo to set duty.
+ * @param[in] servo_num Number of the servo to set duty, which is the
+ * order of adding servo, starting from 0.
  * @param[in] duty The duty to set the servo to in [0, 1].
  * @return ModuleRet Error code.
  */

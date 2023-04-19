@@ -6,19 +6,14 @@ extern "C" {
 #include "stm32_module/stm32_hal.h"
 
 // stm32_module include
-#include "stm32_module/can_transceiver.h"
-#include "stm32_module/module_common.h"
+#include "stm32_module/stm32_module.h"
 }
 
 // gtest include
 #include "gtest/gtest.h"
 
 // mock include
-#include "mock/can_transceiver_mock.hpp"
-#include "mock/freertos_mock.hpp"
-#include "mock/hal_can_mock.hpp"
-#include "mock/mock_common.hpp"
-
+#include "mock/mock.hpp"
 using ::testing::_;
 using ::testing::AllOf;
 using ::testing::ArrayWithSize;

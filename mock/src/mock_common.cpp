@@ -26,6 +26,15 @@ CommonMock::~CommonMock() {}
 CMOCK_MOCK_FUNCTION(CommonMock, void, __module_assert_fail,
                     (const char *, const char *, unsigned int, const char *));
 
+CallbackMock::CallbackMock() {}
+
+CallbackMock::~CallbackMock() {}
+
+CMOCK_MOCK_FUNCTION(CallbackMock, void, button_callback,
+                    (void *, GPIO_PinState));
+
+CMOCK_MOCK_FUNCTION(CallbackMock, void, error_callback, (void *, uint32_t));
+
 namespace mock {
 
 static void googletest_task(void *pvParameters) {

@@ -8,6 +8,23 @@ The following shows the lists of unit test for every stm32 module.
 
 Note: Assertion of function parameter checking is not tested.
 
+### button_monitor
+- ButtonMonitorInitTest
+  - ButtonMonitorInitTest
+  - ButtonMonitorAddButton
+- ButtonMonitorStartTest
+  - ReadStateWileNotStarted
+  - StartButtonMonitor
+  - AddButtonWhileStarted
+- ButtonMonitorReadStateTest
+  - ReadStateWithInvalidButtonNumber
+  - CleanTransition
+  - BouncyTransition
+- ButtonMonitorCallbackTest
+  - SetCallback
+  - ResetCallback
+  - RepeatlyCallback
+
 ### can_transceiver
 
 - CanTransceiverInitTest
@@ -28,7 +45,7 @@ Note: Assertion of function parameter checking is not tested.
 - ErrorHandlerInitTest
   - ErrorHandlerCtor
 - ErrorHandlerStartTest
-  - AccessErrorWhileNotStarted
+  - WriteGetErrorCodeWhileNotStarted
   - ErrorHandlerStart
 - ErrorHandlerAccessErrorTest
   - ErrorHandlerWriteError
@@ -38,11 +55,13 @@ Note: Assertion of function parameter checking is not tested.
 
 - LedControllerInitTest
   - LedControllerCtor
+  - LedControllerAddLed
 - LedControllerStartTest
   - TurnOnOffBlinkWileNotStarted
   - StartLedController
   - AddLedWhileStarted
 - LedControllerOnOffBlinkTest
+  - TurnOnOffBlinkWithInvalidLedNumber
   - TurnOnLed
   - TurnOnLedWhileOn
   - TurnOffLed

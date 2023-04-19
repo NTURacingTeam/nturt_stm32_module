@@ -24,9 +24,9 @@ ModuleRet __LedController_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   LedController* const self = (LedController*)_self;
-  return Task_create_freertos_task(
-      (Task*)self, "led_controller", TaskPriorityLow, self->task_stack_,
-      sizeof(self->task_stack_) / sizeof(StackType_t));
+  return Task_create_freertos_task((Task*)self, "led_controller",
+                                   TaskPriorityLow, self->task_stack_,
+                                   LED_CONTROLLER_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -71,10 +71,10 @@ ModuleRet LedController_add_led(LedController* const self,
 
 ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(led_num));
 
-  if (self->super_.state_ != TaskRunning) {
-    return ModuleError;
-  } else if (led_num >= List_size(&self->led_list_)) {
+  if (self->super_.state_ != TaskRunning ||
+      led_num >= List_size(&self->led_list_)) {
     return ModuleError;
   }
 
@@ -94,10 +94,10 @@ ModuleRet LedController_turn_on(LedController* const self, const int led_num) {
 
 ModuleRet LedController_turn_off(LedController* const self, const int led_num) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(led_num));
 
-  if (self->super_.state_ != TaskRunning) {
-    return ModuleError;
-  } else if (List_size(&self->led_list_) <= led_num) {
+  if (self->super_.state_ != TaskRunning ||
+      List_size(&self->led_list_) <= led_num) {
     return ModuleError;
   }
 
@@ -116,11 +116,11 @@ ModuleRet LedController_turn_off(LedController* const self, const int led_num) {
 ModuleRet LedController_blink(LedController* const self, const int led_num,
                               const int period) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(led_num));
   module_assert(IS_POSTIVE(period));
 
-  if (self->super_.state_ != TaskRunning) {
-    return ModuleError;
-  } else if (List_size(&self->led_list_) <= led_num) {
+  if (self->super_.state_ != TaskRunning ||
+      List_size(&self->led_list_) <= led_num) {
     return ModuleError;
   }
 

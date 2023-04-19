@@ -10,17 +10,14 @@ extern "C" {
 #include "stm32_module/stm32_hal.h"
 
 // stm32_module include
-#include "stm32_module/led_controller.h"
-#include "stm32_module/module_common.h"
+#include "stm32_module/stm32_module.h"
 }
 
 // gtest include
 #include "gtest/gtest.h"
 
 // mock include
-#include "mock/freertos_mock.hpp"
-#include "mock/hal_gpio_mock.hpp"
-#include "mock/mock_common.hpp"
+#include "mock/mock.hpp"
 
 using ::testing::_;
 using ::testing::InSequence;
@@ -48,13 +45,14 @@ TEST(LedControllerInitTest, LedControllerCtor) {
   // really nothing to check
 }
 
-TEST(LedControllerInitTest, LedControllerInitLed) {
+TEST(LedControllerInitTest, LedControllerAddLed) {
   LedController led_controller;
   struct led_cb led_cb;
 
   LedController_ctor(&led_controller);
-  EXPECT_EQ(LedController_add_led(&led_controller, &led_cb, GPIOA, 0),
-            ModuleOK);
+  EXPECT_EQ(
+      LedController_add_led(&led_controller, &led_cb, num_to_gpio_port[0], 0),
+      ModuleOK);
 }
 
 /* led controller start test -------------------------------------------------*/
@@ -75,6 +73,7 @@ TEST_F(LedControllerStartTest, TurnOnOffBlinkWileNotStarted) {
   EXPECT_CALL(gpio_mock_, HAL_GPIO_WritePin).Times(0);
   EXPECT_CALL(freertos_mock_, xTaskCreateStatic).Times(0);
 
+  LedController_add_led(&led_controller_, &led_cb_, num_to_gpio_port[0], 0);
   EXPECT_EQ(LedController_turn_on(&led_controller_, 0), ModuleError);
   EXPECT_EQ(LedController_turn_off(&led_controller_, 0), ModuleError);
   EXPECT_EQ(LedController_blink(&led_controller_, 0, 0), ModuleError);
@@ -123,6 +122,14 @@ class LedControllerOnOffBlinkTest : public Test {
 
   HAL_GPIOMock gpio_mock_;
 };
+
+TEST_F(LedControllerOnOffBlinkTest, TurnOnOffBlinkWithInvalidLedNumber) {
+  EXPECT_CALL(gpio_mock_, HAL_GPIO_WritePin).Times(0);
+
+  EXPECT_EQ(LedController_turn_on(&led_controller_, NUM_LED), ModuleError);
+  EXPECT_EQ(LedController_turn_off(&led_controller_, NUM_LED), ModuleError);
+  EXPECT_EQ(LedController_blink(&led_controller_, NUM_LED, 0), ModuleError);
+}
 
 TEST_F(LedControllerOnOffBlinkTest, TurnOnLed) {
   for (int i = 0; i < NUM_LED; i++) {

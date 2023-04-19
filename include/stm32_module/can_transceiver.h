@@ -26,6 +26,10 @@ extern "C" {
 #include "stm32_module/module_common.h"
 
 /* macro ---------------------------------------------------------------------*/
+// parmeter
+#define CAN_TRANSCEIVER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#define CAN_TRANSCEIVER_TASK_PERIOD 5
+
 // assert macro
 #define IS_DLC(DLC) ((DLC) <= 8U)
 
@@ -54,7 +58,7 @@ typedef struct can_transceiver {
   // member variable
   CanHandle* can_handle_;
 
-  StackType_t task_stack_[256];
+  StackType_t task_stack_[CAN_TRANSCEIVER_TASK_STACK_SIZE];
 
   /// @brief List control block for tracking the list of can transceivers.
   struct list_cb can_transceiver_list_cb;

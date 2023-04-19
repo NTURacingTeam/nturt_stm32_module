@@ -22,10 +22,14 @@ extern "C" {
 
 /* macro ---------------------------------------------------------------------*/
 // parmeter
+#define BUTTON_MONITOR_TASK_STACK_SIZE (8 * configMINIMAL_STACK_SIZE)
 #define BUTTON_MONITOR_TASK_PERIOD 2
-#define BUTTON_DEBOUNCE_TIMES 5
+#define BUTTON_MONITOR_DEBOUNCE_TIMES 5
 
 /* type ----------------------------------------------------------------------*/
+typedef void (*ButtonCallback_t)(void*, GPIO_PinState);
+
+/// @brief Struct for button control block.
 struct button_cb {
   GPIO_TypeDef* button_port;
 
@@ -35,11 +39,19 @@ struct button_cb {
 
   int debounce_count;
 
+  ButtonCallback_t callback;
+
+  void* arg;
+
   /// @brief List control block for tracking the list of buttons.
   struct list_cb button_list_cb;
 };
 
 /* class ---------------------------------------------------------------------*/
+/**
+ * @brief Class for monitoring button.
+ *
+ */
 typedef struct button_monitor {
   // inherited class
   Task super_;
@@ -47,7 +59,7 @@ typedef struct button_monitor {
   // member variable
   List button_list_;
 
-  StackType_t task_stack_[128];
+  StackType_t task_stack_[BUTTON_MONITOR_TASK_STACK_SIZE];
 } ButtonMonitor;
 
 /* constructor ---------------------------------------------------------------*/
@@ -69,7 +81,7 @@ void ButtonMonitor_ctor(ButtonMonitor* const self);
 ModuleRet ButtonMonitor_start(ButtonMonitor* const self);
 
 /**
- * @brief Function for adding button to mutton monitor.
+ * @brief Function for adding button to button monitor.
  *
  * @param[in,out] self The instance of the class.
  * @param[in,out] button_cb Button control block for the button.
@@ -82,6 +94,24 @@ ModuleRet ButtonMonitor_add_button(ButtonMonitor* const self,
                                    struct button_cb* const button_cb,
                                    GPIO_TypeDef* const button_port,
                                    const uint16_t button_pin);
+
+/**
+ * @brief Function for registering callback function.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] button_num The number of button to register callback, which is the
+ * order of adding button, starting from 0.
+ * @param[in] callback The callback function.
+ * @param[in] arg The argument of the callback function.
+ * @return ModuleRet Error code.
+ * @warning The callback function is executed inside a critical section.
+ * @warning When a callback function is already registered for that button, it
+ * will be overwritten by the new one.
+ */
+ModuleRet ButtonMonitor_register_callback(ButtonMonitor* const self,
+                                          const int button_num,
+                                          const ButtonCallback_t callback,
+                                          void* const arg);
 
 /**
  * @brief Function for reading button state.

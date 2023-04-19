@@ -6,14 +6,14 @@ extern "C" {
 #include "FreeRTOS.h"
 
 // stm32_module include
-#include "stm32_module/module_common.h"
+#include "stm32_module/stm32_module.h"
 }
 
 // gtest include
 #include "gtest/gtest.h"
 
 // mock include
-#include "mock/freertos_mock.hpp"
+#include "mock/mock.hpp"
 
 using ::testing::_;
 using ::testing::Invoke;

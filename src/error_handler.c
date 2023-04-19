@@ -24,9 +24,9 @@ ModuleRet __ErrorHandler_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ErrorHandler* const self = (ErrorHandler*)_self;
-  return Task_create_freertos_task(
-      (Task*)self, "error_handler", TaskPriorityRealtime, self->task_stack_,
-      sizeof(self->task_stack_) / sizeof(StackType_t));
+  return Task_create_freertos_task((Task*)self, "error_handler",
+                                   TaskPriorityRealtime, self->task_stack_,
+                                   ERROR_HANDLER_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -45,6 +45,28 @@ void ErrorHandler_ctor(ErrorHandler* self) {
 }
 
 /* member function -----------------------------------------------------------*/
+ModuleRet ErrorHandler_add_error_callback(
+    ErrorHandler* const self, struct error_callback_cb* const error_callback_cb,
+    ErrorCallback_t callback, void* const arg, const uint32_t error_code) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NULL(error_callback_cb));
+  module_assert(IS_NOT_NULL(callback));
+  module_assert(IS_ERROR_CODE(error_code));
+
+  if (self->super_.state_ != TaskReset) {
+    return ModuleError;
+  }
+
+  error_callback_cb->callback = callback;
+  error_callback_cb->arg = arg;
+
+  taskENTER_CRITICAL();
+  List_push_back(&self->error_callback_list_,
+                 &error_callback_cb->error_callback_list_cb, error_callback_cb);
+  taskEXIT_CRITICAL();
+
+  return ModuleOK;
+}
 ModuleRet ErrorHandler_write_error(ErrorHandler* const self,
                                    const uint32_t error_code,
                                    const uint32_t option) {
@@ -69,8 +91,14 @@ ModuleRet ErrorHandler_write_error(ErrorHandler* const self,
   return ModuleOK;
 }
 
-uint32_t ErrorHandler_get_error(const ErrorHandler* const self) {
-  return self->error_code_;
+ModuleRet ErrorHandler_get_error(const ErrorHandler* const self,
+                                 uint32_t* code) {
+  if (self->super_.state_ != TaskRunning) {
+    return ModuleError;
+  }
+
+  *code = self->error_code_;
+  return ModuleOK;
 }
 
 void ErrorHandler_task_code(void* const _self) {
@@ -85,5 +113,21 @@ void ErrorHandler_task_code(void* const _self) {
     } else {
       self->error_code_ &= ~(error_code & ERROR_CODE_ALL);
     }
+
+    ListIter error_callback_iter;
+    ListIter_ctor(&error_callback_iter, &self->error_callback_list_);
+
+    taskENTER_CRITICAL();
+    struct error_callback_cb* error_callback_cb =
+        (struct error_callback_cb*)ListIter_next(&error_callback_iter);
+    while (error_callback_cb != NULL) {
+      if (error_callback_cb->error_code & error_code) {
+        error_callback_cb->callback(error_callback_cb->arg, error_code);
+      }
+
+      error_callback_cb =
+          (struct error_callback_cb*)ListIter_next(&error_callback_iter);
+    }
+    taskEXIT_CRITICAL();
   }
 }

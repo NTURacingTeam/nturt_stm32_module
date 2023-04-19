@@ -1,18 +1,19 @@
+// stl include
+#include <cstdint>
+
 extern "C" {
 // freertos include
 #include "FreeRTOS.h"
 
 // stm32_module include
-#include "stm32_module/error_handler.h"
-#include "stm32_module/module_common.h"
+#include "stm32_module/stm32_module.h"
 }
 
 // gtest include
 #include "gtest/gtest.h"
 
 // mock include
-#include "mock/freertos_mock.hpp"
-#include "mock/mock_common.hpp"
+#include "mock/mock.hpp"
 
 using ::testing::Invoke;
 using ::testing::Return;
@@ -38,7 +39,12 @@ class ErrorHandlerStartTest : public Test {
   FreertosMock freertos_mock_;
 };
 
-TEST_F(ErrorHandlerStartTest, AccessErrorWhileNotStarted) {
+TEST_F(ErrorHandlerStartTest, WriteGetErrorCodeWhileNotStarted) {
+  uint32_t error_code = 0x12345678;
+  EXPECT_EQ(
+      ErrorHandler_write_error(&error_handler_, error_code, ERROR_OPTION_SET),
+      ModuleError);
+  EXPECT_EQ(error_handler_.error_code_, 0x12345678);
   EXPECT_EQ(
       ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
                                ERROR_OPTION_SET),
@@ -65,6 +71,8 @@ class ErrorHandlerAccessErrorTest : public Test {
   void TearDown() override { Task_delete((Task*)&error_handler_); }
 
   ErrorHandler error_handler_;
+
+  uint32_t error_code_;
 };
 
 TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerWriteError) {
@@ -73,31 +81,14 @@ TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerWriteError) {
                                          ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR,
                                      ERROR_OPTION_SET),
             ModuleOK);
-  EXPECT_EQ(
-      error_handler_.error_code_,
-      ERROR_CODE_CAN_TRANSMIT_ERROR | ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
-
-  EXPECT_EQ(
-      ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
-                               ERROR_OPTION_CLEAR),
-      ModuleOK);
-
-  EXPECT_EQ(error_handler_.error_code_, ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
-}
-
-TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerGetErrorTest) {
-  ErrorHandler_write_error(
-      &error_handler_,
-      ERROR_CODE_CAN_TRANSMIT_ERROR | ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR,
-      ERROR_OPTION_SET);
-  EXPECT_EQ(
-      ErrorHandler_get_error(&error_handler_),
-      ERROR_CODE_CAN_TRANSMIT_ERROR | ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
+  EXPECT_EQ(ErrorHandler_get_error(&error_handler_, &error_code_), ModuleOK);
+  EXPECT_EQ(error_code_, ERROR_CODE_CAN_TRANSMIT_ERROR |
+                             ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
 
   ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
                            ERROR_OPTION_CLEAR);
-  EXPECT_EQ(ErrorHandler_get_error(&error_handler_),
-            ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
+  ErrorHandler_get_error(&error_handler_, &error_code_);
+  EXPECT_EQ(error_code_, ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
 }
 
 int main(int argc, char** argv) { return mock::run_freertos_test(&argc, argv); }

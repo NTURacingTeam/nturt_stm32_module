@@ -24,9 +24,9 @@ ModuleRet __ServoController_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ServoController* const self = (ServoController*)_self;
-  return Task_create_freertos_task(
-      (Task*)self, "servo_controller", TaskPriorityLow, self->task_stack_,
-      sizeof(self->task_stack_) / sizeof(StackType_t));
+  return Task_create_freertos_task((Task*)self, "servo_controller",
+                                   TaskPriorityLow, self->task_stack_,
+                                   SERVO_CONTROLLER_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -53,9 +53,8 @@ ModuleRet ServoController_add_servo(ServoController* const self,
   module_assert(IS_NOT_NULL(servo_cb));
   module_assert(IS_TIM_CCX_INSTANCE(timer->Instance, channel));
 
-  if (self->super_.state_ != TaskReset) {
-    return ModuleError;
-  } else if (HAL_TIM_PWM_Start(timer, channel) != HAL_OK) {
+  if (self->super_.state_ != TaskReset ||
+      HAL_TIM_PWM_Start(timer, channel) != HAL_OK) {
     return ModuleError;
   }
 
@@ -74,11 +73,11 @@ ModuleRet ServoController_set_direction(ServoController* const self,
                                         const int servo_num,
                                         const int direction) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(servo_num));
   module_assert(IS_SERVO_DIRECTION(direction));
 
-  if (self->super_.state_ != TaskRunning) {
-    return ModuleError;
-  } else if (List_size(&self->servo_list_) <= servo_num) {
+  if (self->super_.state_ != TaskRunning ||
+      List_size(&self->servo_list_) <= servo_num) {
     return ModuleError;
   }
 
@@ -96,11 +95,11 @@ ModuleRet ServoController_set_direction(ServoController* const self,
 ModuleRet ServoController_set_duty(ServoController* const self,
                                    const int servo_num, const float duty) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(servo_num));
   module_assert(IS_SERVO_DUTY(duty));
 
-  if (self->super_.state_ != TaskRunning) {
-    return ModuleError;
-  } else if (List_size(&self->servo_list_) <= servo_num) {
+  if (self->super_.state_ != TaskRunning ||
+      List_size(&self->servo_list_) <= servo_num) {
     return ModuleError;
   }
 
@@ -124,8 +123,9 @@ void ServoController_task_code(void* const _self) {
     struct servo_cb* servo_cb = (struct servo_cb*)ListIter_next(&servo_iter);
     while (servo_cb != NULL) {
       if (servo_cb->current_duty != servo_cb->target_duty) {
-        if (servo_cb->current_duty < servo_cb->target_duty - 0.1) {
-          servo_cb->current_duty += 0.02;
+        if (servo_cb->current_duty <
+            servo_cb->target_duty - SERVO_ACCELERATE_SLOPE) {
+          servo_cb->current_duty += SERVO_ACCELERATE_SLOPE;
         } else {
           servo_cb->current_duty = servo_cb->target_duty;
         }
@@ -133,7 +133,7 @@ void ServoController_task_code(void* const _self) {
         __HAL_TIM_SET_COMPARE(servo_cb->timer, servo_cb->channel,
                               (uint32_t)((0.075 + 0.025 * servo_cb->direction *
                                                       servo_cb->current_duty) *
-                                         TIMER_PRESCALER));
+                                         SERVO_TIMER_PRESCALER));
       }
 
       servo_cb = (struct servo_cb*)ListIter_next(&servo_iter);

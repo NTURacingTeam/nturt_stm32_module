@@ -72,7 +72,7 @@ ModuleRet __CanTransceiver_start(Task* const _self) {
   CanTransceiver_configure(self);
   Task_create_freertos_task((Task*)self, "can_transceiver",
                             TaskPriorityAboveNormal, self->task_stack_,
-                            sizeof(self->task_stack_) / sizeof(StackType_t));
+                            CAN_TRANSCEIVER_TASK_STACK_SIZE);
   return ModuleOK;
 }
 
@@ -237,7 +237,7 @@ void CanTransceiver_task_code(void* const _self) {
     // periodic update for checking timeout and transmit can signal, etc.
     CanTransceiver_periodic_update(self, last_wake);
 
-    vTaskDelayUntil(&last_wake, 5);
+    vTaskDelayUntil(&last_wake, CAN_TRANSCEIVER_TASK_PERIOD);
   }
 }
 

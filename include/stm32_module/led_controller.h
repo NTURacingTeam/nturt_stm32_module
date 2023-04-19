@@ -25,6 +25,7 @@ extern "C" {
 
 /* macro ---------------------------------------------------------------------*/
 // parameter
+#define LED_CONTROLLER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define LED_CONTROLLER_TASK_PERIOD 10
 
 /* type ----------------------------------------------------------------------*/
@@ -62,7 +63,7 @@ typedef struct led_controller {
   // member variable
   List led_list_;
 
-  StackType_t task_stack_[128];
+  StackType_t task_stack_[LED_CONTROLLER_TASK_STACK_SIZE];
 } LedController;
 
 /* constructor ---------------------------------------------------------------*/

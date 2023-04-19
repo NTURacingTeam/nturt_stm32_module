@@ -21,9 +21,9 @@ ModuleRet __ButtonMonitor_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ButtonMonitor* const self = (ButtonMonitor*)_self;
-  return Task_create_freertos_task(
-      (Task*)self, "button_monitor", TaskPriorityLow, self->task_stack_,
-      sizeof(self->task_stack_) / sizeof(StackType_t));
+  return Task_create_freertos_task((Task*)self, "button_monitor",
+                                   TaskPriorityLow, self->task_stack_,
+                                   BUTTON_MONITOR_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -59,6 +59,7 @@ ModuleRet ButtonMonitor_add_button(ButtonMonitor* const self,
   button_cb->button_pin = button_pin;
   button_cb->state = HAL_GPIO_ReadPin(button_port, button_pin);
   button_cb->debounce_count = 0;
+  button_cb->callback = NULL;
 
   taskENTER_CRITICAL();
   List_push_back(&self->button_list_, &button_cb->button_list_cb,
@@ -68,15 +69,38 @@ ModuleRet ButtonMonitor_add_button(ButtonMonitor* const self,
   return ModuleOK;
 }
 
+ModuleRet ButtonMonitor_register_callback(ButtonMonitor* const self,
+                                          const int button_num,
+                                          const ButtonCallback_t callback,
+                                          void* const arg) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(button_num));
+  module_assert(IS_NOT_NULL(callback));
+
+  if (self->super_.state_ != TaskReset ||
+      button_num >= List_size(&self->button_list_)) {
+    return ModuleError;
+  }
+
+  taskENTER_CRITICAL();
+  struct button_cb* button_cb =
+      (struct button_cb*)List_at(&self->button_list_, button_num);
+  button_cb->callback = callback;
+  button_cb->arg = arg;
+  taskEXIT_CRITICAL();
+
+  return ModuleOK;
+}
+
 ModuleRet ButtonMonitor_read_state(ButtonMonitor* const self,
                                    const int button_num,
                                    GPIO_PinState* const state) {
   module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NEGATIVE(button_num));
   module_assert(IS_NOT_NULL(state));
 
-  if (self->super_.state_ != TaskRunning) {
-    return ModuleError;
-  } else if (button_num >= List_size(&self->button_list_)) {
+  if (self->super_.state_ != TaskRunning ||
+      button_num >= List_size(&self->button_list_)) {
     return ModuleError;
   }
 
@@ -104,11 +128,14 @@ void ButtonMonitor_task_code(void* const _self) {
       GPIO_PinState current_state =
           HAL_GPIO_ReadPin(button_cb->button_port, button_cb->button_pin);
       if (current_state != button_cb->state) {
-        if (button_cb->debounce_count < BUTTON_DEBOUNCE_TIMES) {
+        if (button_cb->debounce_count < BUTTON_MONITOR_DEBOUNCE_TIMES) {
           button_cb->debounce_count++;
         } else {
           button_cb->state = current_state;
           button_cb->debounce_count = 0;
+          if (button_cb->callback != NULL) {
+            button_cb->callback(button_cb->arg, current_state);
+          }
         }
       } else if (button_cb->debounce_count != 0) {
         button_cb->debounce_count = 0;

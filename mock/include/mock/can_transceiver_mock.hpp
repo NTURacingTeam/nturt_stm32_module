@@ -3,8 +3,7 @@
 
 extern "C" {
 // stm32_module include
-#include "stm32_module/can_transceiver.h"
-#include "stm32_module/module_common.h"
+#include "stm32_module/stm32_module.h"
 }
 
 // gtest include

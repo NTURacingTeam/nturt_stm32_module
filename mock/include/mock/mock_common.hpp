@@ -15,8 +15,11 @@ extern "C" {
 #include "FreeRTOS.h"
 #include "task.h"
 
+// stm32 include
+#include "stm32_module/stm32_hal.h"
+
 // stm32_module include
-#include "stm32_module/module_common.h"
+#include "stm32_module/stm32_module.h"
 }
 
 // gtest include
@@ -39,6 +42,21 @@ class CommonMock : public CMockMocker<CommonMock> {
 
   CMOCK_MOCK_METHOD(void, __module_assert_fail,
                     (const char *, const char *, unsigned int, const char *));
+};
+
+void button_callback(void *, GPIO_PinState);
+void error_callback(void *, uint32_t);
+
+/// @brief Class for mocking callback fuction using google test framework.
+class CallbackMock : public CMockMocker<CallbackMock> {
+ public:
+  CallbackMock();
+
+  ~CallbackMock();
+
+  CMOCK_MOCK_METHOD(void, button_callback, (void *, GPIO_PinState));
+
+  CMOCK_MOCK_METHOD(void, error_callback, (void *, uint32_t));
 };
 
 namespace testing {

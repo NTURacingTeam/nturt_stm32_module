@@ -21,6 +21,9 @@ extern "C" {
 #include "stm32_module/module_common.h"
 
 /* macro ---------------------------------------------------------------------*/
+// parmeter
+#define ERROR_HANDLER_TASK_STACK_SIZE (8 * configMINIMAL_STACK_SIZE)
+
 #define MAX_ERROR_CODE_BITS 31UL
 #define ERROR_CODE_INVALID_BITS (~((1UL << MAX_ERROR_CODE_BITS) - 1UL))
 
@@ -37,15 +40,27 @@ extern "C" {
 #define ERROR_OPTION_CLEAR 0UL
 
 // assert macro
-#define IS_ERROR_CODE(CODE)                                                   \
-  (((CODE) == ERROR_CODE_ALL) || ((CODE) == ERROR_CODE_CAN_TRANSMIT_ERROR) || \
-   ((CODE) == ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR) ||                        \
-   ((CODE) == ERROR_CODE_CAN_RECEIVE_TIMEOUT_WARN))
+#define IS_ERROR_CODE(CODE)                                                \
+  ((CODE) &                                                                \
+   (ERROR_CODE_CAN_TRANSMIT_ERROR | ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR | \
+    ERROR_CODE_CAN_RECEIVE_TIMEOUT_WARN))
 #define IS_ERROR_OPTION(CODE_WRITE) \
   (((CODE_WRITE) == ERROR_OPTION_SET) || ((CODE_WRITE) == ERROR_OPTION_CLEAR))
 
 /* type ----------------------------------------------------------------------*/
 typedef void (*ErrorCallback_t)(void*, uint32_t);
+
+/// @brief Struct for error callback control block.
+struct error_callback_cb {
+  ErrorCallback_t callback;
+
+  void* arg;
+
+  uint32_t error_code;
+
+  /// @brief List control block for tracking the list of error callback.
+  struct list_cb error_callback_list_cb;
+};
 
 /* class inherited from Task -------------------------------------------------*/
 /**
@@ -59,7 +74,9 @@ typedef struct error_handler {
   // member variable
   uint32_t error_code_;
 
-  StackType_t task_stack_[256];
+  List error_callback_list_;
+
+  StackType_t task_stack_[ERROR_HANDLER_TASK_STACK_SIZE];
 } ErrorHandler;
 
 /* constructor ---------------------------------------------------------------*/
@@ -81,6 +98,23 @@ void ErrorHandler_ctor(ErrorHandler* const self);
 ModuleRet ErrorHandler_start(ErrorHandler* const self);
 
 /**
+ * @brief Function to add error callback.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in,out] error_callback_cb Error callback control block for the
+ * callback.
+ * @param[in] callback The callback function.
+ * @param[in] arg The argument of the callback function.
+ * @param[in] error_code The error code when matched to call the callback.
+ * @return ModuleRet Error code.
+ * @warning The callback function is executed inside a critical section.
+ * @note User is resposible for allocating memory for error_callback_cb.
+ */
+ModuleRet ErrorHandler_add_error_callback(
+    ErrorHandler* const self, struct error_callback_cb* const error_callback_cb,
+    ErrorCallback_t callback, void* const arg, const uint32_t error_code);
+
+/**
  * @brief Function to set or clear error.
  *
  * @param[in,out] self The instance of the class.
@@ -96,9 +130,11 @@ ModuleRet ErrorHandler_write_error(ErrorHandler* const self,
  * @brief Function to get current error code.
  *
  * @param[in,out] self The instance of the class.
- * @return uint32_t Error code.
+ * @param[out] uint32_t Error code.
+ * @return ModuleRet Error code.
  */
-uint32_t ErrorHandler_get_error(const ErrorHandler* const self);
+ModuleRet ErrorHandler_get_error(const ErrorHandler* const self,
+                                 uint32_t* code);
 
 /**
  * @brief Function to run in freertos task.
