@@ -26,6 +26,7 @@ float __Filter_update(Filter *const self, const float data) {
   return 0.0;
 }
 
+// pure virtual function for Filter base class
 float __Filter_get_filtered_data(Filter *const self) {
   (void)self;
 
@@ -34,7 +35,7 @@ float __Filter_get_filtered_data(Filter *const self) {
 }
 
 /* constructor ---------------------------------------------------------------*/
-void Filter_ctor(Filter *const self) {
+void Filter_ctor(Filter *const self, Filter *const chained_filter) {
   module_assert(IS_NOT_NULL(self));
 
   // assign base virtual function
@@ -43,6 +44,9 @@ void Filter_ctor(Filter *const self) {
       .get_filtered_data = __Filter_get_filtered_data,
   };
   self->vptr_ = &vtbl_base;
+
+  // initialize member variable
+  self->chained_filter_ = chained_filter;
 }
 
 /* virtual function redirection ----------------------------------------------*/
@@ -58,14 +62,19 @@ inline float MovingAverageFilter_get_filtered_data(
 
 /* virtual function definition -----------------------------------------------*/
 // from Filter base class
-float __MovingAverageFilter_update(Filter *const _self, const float data) {
+float __MovingAverageFilter_update(Filter *const _self, float data) {
   module_assert(IS_NOT_NULL(_self));
   module_assert(IS_IN_VALUE_RANGE(data));
 
   MovingAverageFilter *const self = (MovingAverageFilter *)_self;
+  // process chained filter first
+  if (self->super_.chained_filter_ != NULL) {
+    data = Filter_update(self->super_.chained_filter_, data);
+  }
+
   if (xPortIsInsideInterrupt()) {
     if (uxQueueMessagesWaitingFromISR(self->data_queue_)) {
-      int oldest_value;
+      float oldest_value;
       xQueueReceiveFromISR(self->data_queue_, &oldest_value, 0);
       self->sum_ -= oldest_value;
     }
@@ -74,7 +83,7 @@ float __MovingAverageFilter_update(Filter *const _self, const float data) {
     xQueueSendToBackFromISR(self->data_queue_, &data, NULL);
   } else {
     if (uxQueueMessagesWaiting(self->data_queue_)) {
-      int oldest_value;
+      float oldest_value;
       xQueueReceive(self->data_queue_, &oldest_value, 0);
       self->sum_ -= oldest_value;
     }
@@ -96,14 +105,14 @@ float __MovingAverageFilter_get_filtered_data(Filter *const _self) {
 
 /* constructor ---------------------------------------------------------------*/
 void MovingAverageFilter_ctor(MovingAverageFilter *const self,
-                              float *const filter_buffer,
-                              const int window_size) {
+                              float *const filter_buffer, const int window_size,
+                              Filter *const chained_filter) {
   module_assert(IS_NOT_NULL(self));
   module_assert(IS_NOT_NULL(filter_buffer));
   module_assert(IS_NOT_NEGATIVE(window_size));
 
   // construct inherited class and redirect virtual function
-  Filter_ctor((Filter *)self);
+  Filter_ctor((Filter *)self, chained_filter);
   static struct FilterVtbl vtbl = {
       .update = __MovingAverageFilter_update,
       .get_filtered_data = __MovingAverageFilter_get_filtered_data,
@@ -133,16 +142,17 @@ float __NormalizeFilter_update(Filter *const _self, float data) {
   module_assert(IS_NOT_NULL(_self));
   module_assert(IS_IN_VALUE_RANGE(data));
 
-  // process chained filter first
   NormalizeFilter *const self = (NormalizeFilter *)_self;
-  if (self->chained_filter_ != NULL) {
-    data = Filter_update(self->chained_filter_, data);
+  // process chained filter first
+  if (self->super_.chained_filter_ != NULL) {
+    data = Filter_update(self->super_.chained_filter_, data);
   }
 
   // update bounds
-  if (data > self->upper_bound_) {
+  if (self->upper_bound_ < data) {
     self->upper_bound_ = data;
-  } else if (self->filtered_data_ < self->lower_bound_) {
+  }
+  if (self->lower_bound_ > data) {
     self->lower_bound_ = data;
   }
 
@@ -169,7 +179,7 @@ void NormalizeFilter_ctor(NormalizeFilter *const self, const float upper_bound,
   module_assert(IS_IN_VALUE_RANGE(lower_bound));
 
   // construct inherited class and redirect virtual function
-  Filter_ctor((Filter *)self);
+  Filter_ctor((Filter *)self, chained_filter);
   static struct FilterVtbl vtbl = {
       .update = __NormalizeFilter_update,
       .get_filtered_data = __NormalizeFilter_get_filtered_data,
@@ -179,7 +189,6 @@ void NormalizeFilter_ctor(NormalizeFilter *const self, const float upper_bound,
   // initialize member variable
   self->upper_bound_ = upper_bound;
   self->lower_bound_ = lower_bound;
-  self->chained_filter_ = chained_filter;
 }
 
 /* constructor ---------------------------------------------------------------*/

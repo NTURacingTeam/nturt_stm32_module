@@ -8,6 +8,7 @@ extern "C" {
 #include "stm32_module/button_monitor.h"
 #include "stm32_module/can_transceiver.h"
 #include "stm32_module/error_handler.h"
+#include "stm32_module/filter.h"
 #include "stm32_module/led_controller.h"
 #include "stm32_module/module_common.h"
 #include "stm32_module/servo_controller.h"

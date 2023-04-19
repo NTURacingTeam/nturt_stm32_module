@@ -23,6 +23,9 @@ struct FilterVtbl;
 typedef struct filter {
   // virtual table
   struct FilterVtbl* vptr_;
+
+  // member variable
+  struct filter* chained_filter_;
 } Filter;
 
 /// @brief Virtual table for Filter.
@@ -33,7 +36,7 @@ struct FilterVtbl {
 };
 
 /* constructor ---------------------------------------------------------------*/
-void Filter_ctor(Filter* const self);
+void Filter_ctor(Filter* const self, Filter* const chained_filter);
 
 /* member function -----------------------------------------------------------*/
 /**
@@ -66,7 +69,7 @@ typedef struct moving_average_filter {
 
   int window_size_;
 
-  int sum_;
+  float sum_;
 } MovingAverageFilter;
 
 /* constructor ---------------------------------------------------------------*/
@@ -77,12 +80,14 @@ typedef struct moving_average_filter {
  * @param[in] filter_buffer The buffer for storing data, must have length larger
  * than window_size.
  * @param[in] window_size The size of the filter.
+ * @param[in] chained_filter The chained filter will be processed before this
+ * filter, NULL if no chained filter.
  * @return None.
  * @note User is resposible for managing memory for filter_buffer.
  */
 void MovingAverageFilter_ctor(MovingAverageFilter* const self,
-                              float* const filter_buffer,
-                              const int window_size);
+                              float* const filter_buffer, const int window_size,
+                              Filter* const chained_filter);
 
 /* member function -----------------------------------------------------------*/
 /**
@@ -114,8 +119,6 @@ typedef struct normalize_filter {
   float upper_bound_;
 
   float lower_bound_;
-
-  Filter* chained_filter_;
 } NormalizeFilter;
 
 /* constructor ---------------------------------------------------------------*/
