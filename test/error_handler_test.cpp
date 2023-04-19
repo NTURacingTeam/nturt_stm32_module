@@ -44,11 +44,8 @@ TEST_F(ErrorHandlerStartTest, WriteGetErrorCodeWhileNotStarted) {
   EXPECT_EQ(
       ErrorHandler_write_error(&error_handler_, error_code, ERROR_OPTION_SET),
       ModuleError);
-  EXPECT_EQ(error_handler_.error_code_, 0x12345678);
-  EXPECT_EQ(
-      ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
-                               ERROR_OPTION_SET),
-      ModuleError);
+  EXPECT_EQ(ErrorHandler_get_error(&error_handler_, &error_code), ModuleError);
+  EXPECT_EQ(error_code, 0x12345678);
 }
 
 TEST_F(ErrorHandlerStartTest, ErrorHandlerStart) {
