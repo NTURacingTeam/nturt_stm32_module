@@ -8,22 +8,22 @@
 #include "queue.h"
 
 /* constructor ---------------------------------------------------------------*/
-void MovingFilterFilter_ctor(MovingAverageFilter *const self,
-                             float *const filter_buffer,
-                             const int filter_length) {
+void MovingAverageFilter_ctor(MovingAverageFilter *const self,
+                              float *const filter_buffer,
+                              const int window_size) {
   module_assert(IS_NOT_NULL(self));
   module_assert(IS_NOT_NULL(filter_buffer));
-  module_assert(IS_NOT_NEGATIVE(filter_length));
+  module_assert(IS_NOT_NEGATIVE(window_size));
 
   self->data_queue_ = xQueueCreateStatic(
-      filter_length, sizeof(float), (uint8_t *)filter_buffer, &self->queue_cb_);
-  self->filter_length_ = filter_length;
+      window_size, sizeof(float), (uint8_t *)filter_buffer, &self->queue_cb_);
+  self->window_size_ = window_size;
   self->sum_ = 0;
 }
 
 /* member function -----------------------------------------------------------*/
-void MovingFilterFilter_add_data(MovingAverageFilter *const self,
-                                 const float data) {
+void MovingAverageFilter_add_data(MovingAverageFilter *const self,
+                                  const float data) {
   module_assert(IS_NOT_NULL(self));
 
   if (xPortIsInsideInterrupt()) {
@@ -47,19 +47,17 @@ void MovingFilterFilter_add_data(MovingAverageFilter *const self,
   }
 }
 
-float MovingFilterFilter_get_filtered_data(MovingAverageFilter *const self) {
+float MovingAverageFilter_get_filtered_data(MovingAverageFilter *const self) {
   module_assert(IS_NOT_NULL(self));
 
   if (xPortIsInsideInterrupt() &&
-      uxQueueMessagesWaitingFromISR(self->data_queue_) !=
-          self->filter_length_) {
+      uxQueueMessagesWaitingFromISR(self->data_queue_) != self->window_size_) {
     return 0.0;
-  } else if (uxQueueMessagesWaiting(self->data_queue_) !=
-             self->filter_length_) {
+  } else if (uxQueueMessagesWaiting(self->data_queue_) != self->window_size_) {
     return 0.0;
   }
 
-  return self->sum_ / self->filter_length_;
+  return self->sum_ / self->window_size_;
 }
 
 /* constructor ---------------------------------------------------------------*/

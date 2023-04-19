@@ -14,7 +14,7 @@ typedef struct moving_average_filter {
 
   StaticQueue_t queue_cb_;
 
-  int filter_length_;
+  int window_size_;
 
   int sum_;
 } MovingAverageFilter;
@@ -24,15 +24,15 @@ typedef struct moving_average_filter {
  * @brief Constructor for MovingAverageFilter.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] filter_buffer The buffer for storing data, must have length be
- * larger than filter_length.
- * @param[in] filter_length The size of the filter.
+ * @param[in] filter_buffer The buffer for storing data, must have length larger
+ * than window_size.
+ * @param[in] window_size The size of the filter.
  * @return None.
  * @note User is resposible for managing memory for filter_buffer.
  */
-void MovingFilterFilter_ctor(MovingAverageFilter* const self,
-                             float* const filter_buffer,
-                             const int filter_length);
+void MovingAverageFilter_ctor(MovingAverageFilter* const self,
+                              float* const filter_buffer,
+                              const int window_size);
 
 /* member function -----------------------------------------------------------*/
 /**
@@ -42,8 +42,8 @@ void MovingFilterFilter_ctor(MovingAverageFilter* const self,
  * @param[in] data The data to be added.
  * @return None.
  */
-void MovingFilterFilter_add_data(MovingAverageFilter* const self,
-                                 const float data);
+void MovingAverageFilter_add_data(MovingAverageFilter* const self,
+                                  const float data);
 
 /**
  * @brief Function for getting the filtered data.
@@ -51,7 +51,7 @@ void MovingFilterFilter_add_data(MovingAverageFilter* const self,
  * @param[in,out] self The instance of the class.
  * @return float The filtered data.
  */
-float MovingFilterFilter_get_filtered_data(MovingAverageFilter* const self);
+float MovingAverageFilter_get_filtered_data(MovingAverageFilter* const self);
 
 /* class ---------------------------------------------------------------------*/
 /**
