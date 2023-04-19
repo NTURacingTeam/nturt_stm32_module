@@ -8,8 +8,58 @@
 // stm32_module include
 #include "stm32_module/module_common.h"
 
+/* macro ---------------------------------------------------------------------*/
+// assert macro
+#define IS_IN_VALUE_RANGE(VAL) ((VAL) >= 0.0F && (VAL) <= 1.0F)
+
+/* abstract class ------------------------------------------------------------*/
+// forward declaration
+struct FilterVtbl;
+
+/**
+ * @brief Abstract class for managing filter.
+ *
+ */
+typedef struct filter {
+  // virtual table
+  struct FilterVtbl* vptr_;
+} Filter;
+
+/// @brief Virtual table for Filter.
+struct FilterVtbl {
+  float (*update)(Filter*, float);
+
+  float (*get_filtered_data)(Filter*);
+};
+
+/* constructor ---------------------------------------------------------------*/
+void Filter_ctor(Filter* const self);
+
+/* member function -----------------------------------------------------------*/
+/**
+ * @brief Function for adding new data to the filter and returns the current
+ * filtered data.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] data The data to be added.
+ * @return float The filtered data.
+ */
+float Filter_update(Filter* const self, const float data);
+
+/**
+ * @brief Function for getting the current filtered data.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return float The filtered data.
+ */
+float Filter_get_filtered_data(Filter* const self);
+
 /* class ---------------------------------------------------------------------*/
 typedef struct moving_average_filter {
+  // inherited class
+  Filter super_;
+
+  // member variable
   QueueHandle_t data_queue_;
 
   StaticQueue_t queue_cb_;
@@ -36,22 +86,71 @@ void MovingAverageFilter_ctor(MovingAverageFilter* const self,
 
 /* member function -----------------------------------------------------------*/
 /**
- * @brief Function for adding data to the filter.
+ * @brief Function for adding new data to the filter and returns the current
+ * filtered data.
  *
  * @param[in,out] self The instance of the class.
  * @param[in] data The data to be added.
- * @return None.
+ * @return float The filtered data.
  */
-void MovingAverageFilter_add_data(MovingAverageFilter* const self,
-                                  const float data);
+float MovingAverageFilter_update(MovingAverageFilter* const self,
+                                 const float data);
 
 /**
- * @brief Function for getting the filtered data.
+ * @brief Function for getting the current filtered data.
  *
  * @param[in,out] self The instance of the class.
  * @return float The filtered data.
  */
 float MovingAverageFilter_get_filtered_data(MovingAverageFilter* const self);
+
+/* class ---------------------------------------------------------------------*/
+typedef struct normalize_filter {
+  // inherited class
+  Filter super_;
+
+  float filtered_data_;
+
+  float upper_bound_;
+
+  float lower_bound_;
+
+  Filter* chained_filter_;
+} NormalizeFilter;
+
+/* constructor ---------------------------------------------------------------*/
+/**
+ * @brief Constructor for NormalizeFilter.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] upper_bound The initial upper bound of the filter.
+ * @param[in] lower_bound The initial lower bound of the filter.
+ * @param[in] chained_filter The chained filter will be processed before this
+ * filter, NULL if no chained filter.
+ * @return None.
+ */
+void NormalizeFilter_ctor(NormalizeFilter* const self, const float upper_bound,
+                          const float lower_bound,
+                          Filter* const chained_filter);
+
+/* member function -----------------------------------------------------------*/
+/**
+ * @brief Function for adding new data to the filter and returns the current
+ * filtered data.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] data The data to be added.
+ * @return float The filtered data.
+ */
+float NormalizeFilter_update(NormalizeFilter* const self, const float data);
+
+/**
+ * @brief Function for getting the current filtered data.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return float The filtered data.
+ */
+float NormalizeFilter_get_filtered_data(NormalizeFilter* const self);
 
 /* class ---------------------------------------------------------------------*/
 /**

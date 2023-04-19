@@ -45,6 +45,7 @@ add_subdirectory(mock)
 # library: stm32_module
 # build as a dynamic library for c-mock to mock out at link time
 add_library(stm32_module SHARED
+    src/analog_sensor.c
     src/button_monitor.c
     src/can_transceiver.c
     src/error_handler.c
