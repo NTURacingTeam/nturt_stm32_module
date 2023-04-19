@@ -48,6 +48,7 @@ add_library(stm32_module SHARED
     src/button_monitor.c
     src/can_transceiver.c
     src/error_handler.c
+    src/filter.c
     src/led_controller.c
     src/module_common.c
     src/servo_controller.c

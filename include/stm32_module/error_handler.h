@@ -108,7 +108,7 @@ ModuleRet ErrorHandler_start(ErrorHandler* const self);
  * @param[in] error_code The error code when matched to call the callback.
  * @return ModuleRet Error code.
  * @warning The callback function is executed inside a critical section.
- * @note User is resposible for allocating memory for error_callback_cb.
+ * @note User is resposible for managing memory for error_callback_cb.
  */
 ModuleRet ErrorHandler_add_error_callback(
     ErrorHandler* const self, struct error_callback_cb* const error_callback_cb,

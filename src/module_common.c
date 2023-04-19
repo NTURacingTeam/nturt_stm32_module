@@ -3,6 +3,7 @@
 // glibc include
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 // freertos include
 #include "FreeRTOS.h"
@@ -18,6 +19,136 @@ __attribute__((weak)) void __module_assert_fail(const char *assertion,
   (void)line;
   (void)function;
 }
+
+#if 0
+
+/* constructor ---------------------------------------------------------------*/
+void Queue_ctor(Queue *const self, void *buffer, int capacity,
+                int element_size) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NULL(buffer));
+  module_assert(IS_POSTIVE(capacity));
+  module_assert(IS_POSTIVE(element_size));
+  module_assert(IS_GREATER_OR_EQUAL(capacity, element_size));
+
+  self->buffer_ = buffer;
+  self->capacity_ = capacity;
+  self->element_size_ = element_size;
+  self->size_ = 0;
+  self->head_ = 0;
+  self->tail_ = 0;
+}
+
+/* member function -----------------------------------------------------------*/
+int Queue_get_size(const Queue *const self) {
+  module_assert(IS_NOT_NULL(self));
+  return self->size_;
+}
+
+int Queue_get_capacity(const Queue *const self) {
+  module_assert(IS_NOT_NULL(self));
+  return self->capacity_;
+}
+
+void Queue_enqueue(Queue *const self, const void *const data) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NULL(data));
+
+  // copy data to buffer
+  memcpy(self->buffer_ + self->tail_ * self->element_size_, data,
+         self->element_size_);
+  self->tail_ = (self->tail_ + 1) % self->capacity_;
+
+  // dequeue if buffer is full
+  if (self->size_ < self->capacity_) {
+    self->size_++;
+  } else {
+    self->head_ = (self->head_ + 1) % self->capacity_;
+  }
+}
+
+void Queue_enqueue_all(Queue *const self, const void *send_buffer,
+                       int send_buffer_length) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NULL(send_buffer));
+  module_assert(IS_POSTIVE(send_buffer_length));
+
+  // check if the send buffer length is larger than the queue capacity
+  if (send_buffer_length > self->capacity_) {
+    send_buffer += (send_buffer_length - self->capacity_) * self->element_size_;
+    send_buffer_length = self->capacity_;
+  }
+
+  // check if buffer will loop around
+  if (self->tail_ + send_buffer_length > self->capacity_) {
+    int num_items_before_wrap = self->capacity_ - self->tail_;
+    memcpy(self->buffer_ + self->tail_ * self->element_size_, send_buffer,
+           num_items_before_wrap * self->element_size_);
+    memcpy(self->buffer_,
+           send_buffer + num_items_before_wrap * self->element_size_,
+           (send_buffer_length - num_items_before_wrap) * self->element_size_);
+  } else {
+    memcpy(self->buffer_ + self->tail_ * self->element_size_, send_buffer,
+           send_buffer_length * self->element_size_);
+  }
+  self->tail_ = (self->tail_ + send_buffer_length) % self->capacity_;
+
+  // dequeue if buffer is full
+  if (self->size_ + send_buffer_length <= self->capacity_) {
+    self->size_ += send_buffer_length;
+  } else {
+    self->size_ = self->capacity_;
+    self->head_ = (self->tail_ + 1) % self->capacity_;
+  }
+}
+
+int Queue_dequeue(Queue *const self, void *const data) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NULL(data));
+
+  if (self->size_ == 0) {
+    return 0;
+  }
+
+  // copy data from buffer
+  memcpy(data, self->buffer_ + self->head_ * self->element_size_,
+         self->element_size_);
+  self->head_ = (self->head_ + 1) % self->capacity_;
+  self->size_--;
+  return 1;
+}
+
+int Queue_dequeue_all(Queue *const self, void *const receive_buffer,
+                      const int receive_buffer_length) {
+  module_assert(IS_NOT_NULL(self));
+  module_assert(IS_NOT_NULL(receive_buffer));
+  module_assert(IS_POSTIVE(receive_buffer_length));
+
+  if (self->size_ == 0) {
+    return 0;
+  }
+
+  int num_items =
+      receive_buffer_length > self->size_ ? self->size_ : receive_buffer_length;
+  // check if buffer will loop around
+  if (self->head_ + num_items > self->capacity_) {
+    int num_items_before_wrap = self->capacity_ - self->head_;
+    memcpy(receive_buffer, self->buffer_ + self->head_ * self->element_size_,
+           num_items_before_wrap * self->element_size_);
+    memcpy(receive_buffer + num_items_before_wrap * self->element_size_,
+           self->buffer_,
+           (num_items - num_items_before_wrap) * self->element_size_);
+  } else {
+    memcpy(receive_buffer, self->buffer_ + self->head_ * self->element_size_,
+           num_items * self->element_size_);
+  }
+
+  self->head_ = (self->head_ + num_items) % self->capacity_;
+  self->size_ -= num_items;
+  return num_items;
+}
+
+#endif
 
 /* constructor ---------------------------------------------------------------*/
 void List_ctor(List *const self) {

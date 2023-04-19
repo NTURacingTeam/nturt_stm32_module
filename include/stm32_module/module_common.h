@@ -40,7 +40,9 @@ extern "C" {
 #define IS_POSTIVE(VAL) ((VAL) > 0)
 #define IS_NOT_NEGATIVE(VAL) ((VAL) >= 0)
 #define IS_GREATER(VAL1, VAL2) ((VAL1) > (VAL2))
+#define IS_GREATER_OR_EQUAL(VAL1, VAL2) ((VAL1) >= (VAL2))
 #define IS_LESS(VAL1, VAL2) ((VAL1) < (VAL2))
+#define IS_LESS_OR_EQUAL(VAL1, VAL2) ((VAL1) <= (VAL2))
 
 /* type ----------------------------------------------------------------------*/
 typedef enum module_ret {
@@ -67,11 +69,6 @@ typedef enum task_state {
   TaskRunning,
 } TaskState;
 
-/* function ------------------------------------------------------------------*/
-void __module_assert_fail(const char* assertion, const char* file,
-                          unsigned int line, const char* function);
-
-/* type ----------------------------------------------------------------------*/
 /// @brief Struct for list control block.
 struct list_cb {
   void* data;
@@ -79,11 +76,106 @@ struct list_cb {
   struct list_cb* volatile next;
 };
 
+/* function ------------------------------------------------------------------*/
+void __module_assert_fail(const char* assertion, const char* file,
+                          unsigned int line, const char* function);
+
+#if 0
+
+/* class ---------------------------------------------------------------------*/
+/**
+ * @brief Class for managing queue.
+ *
+ * @note The data is copied to the queue.
+ */
+typedef struct queue {
+  void* volatile buffer_;
+
+  volatile int capacity_;
+
+  volatile int element_size_;
+
+  volatile int size_;
+
+  volatile int head_;
+
+  volatile int tail_;
+} Queue;
+
+/* constructor ---------------------------------------------------------------*/
+/**
+ * @brief Constructor for Queue.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] buffer The buffer for the queue.
+ * @param[in] capacity The capacity of the queue.
+ * @param[in] element_size The size of the element.
+ * @note User is responsible for allocating memory for buffer.
+ * @return None.
+ */
+void Queue_ctor(Queue* const self, void* buffer, int capacity,
+                int element_size);
+
+/* member function -----------------------------------------------------------*/
+/**
+ * @brief Function to get the size of the queue.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return int The size of the queue.
+ */
+int Queue_get_size(const Queue* const self);
+
+/**
+ * @brief Function to get the capacity of the queue.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return int The capacity of the queue.
+ */
+int Queue_get_capacity(const Queue* const self);
+
+/**
+ * @brief Function to put an element to the queue.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return None.
+ * @warning This function is not thread safe.
+ */
+void Queue_enqueue(Queue* const self, const void* const data);
+
+void Queue_enqueue_all(Queue* const self, const void* send_buffer,
+                       int send_buffer_length);
+
+/**
+ * @brief Function to get an element from the queue.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[out] data The data to get.
+ * @return int Number of elements received.
+ * @warning This function is not thread safe.
+ */
+int Queue_dequeue(Queue* const self, void* const data);
+
+/**
+ * @brief Function to get all elements from the queue.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[out] receive_buffer The buffer to receive data.
+ * @param[in] receive_buffer_length The length of the receive buffer.
+ * @return int Number of elements received.
+ * @warning This function is not thread safe.
+ */
+int Queue_dequeue_all(Queue* const self, void* const receive_buffer,
+                      const int receive_buffer_length);
+
+#endif
+
 /* class ---------------------------------------------------------------------*/
 /**
  * @brief Class for managing list.
  *
- * Implemented as a singly linked list.
+ * @warning The data is not copied, only the pointer is stored, so user is
+ * resposible for managing the lifetime of the data.
+ * @note Implemented as a singly linked list.
  *
  */
 typedef struct list {

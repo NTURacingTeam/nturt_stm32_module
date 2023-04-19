@@ -84,7 +84,7 @@ void LedController_ctor(LedController* const self);
  * @param[in] led_port The port of the led.
  * @param[in] led_pin The pin of the led.
  * @return ModuleRet Error code.
- * @note User is resposible for allocating memory for led_cb.
+ * @note User is resposible for managing memory for led_cb.
  */
 ModuleRet LedController_add_led(LedController* const self,
                                 struct led_cb* const led_cb,

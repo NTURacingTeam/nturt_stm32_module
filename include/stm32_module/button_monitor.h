@@ -88,7 +88,7 @@ ModuleRet ButtonMonitor_start(ButtonMonitor* const self);
  * @param[in] button_port The port of the button.
  * @param[in] button_pin The pin of the button.
  * @return ModuleRet Error code.
- * @note User is resposible for allocating memory for button_cb.
+ * @note User is resposible for managing memory for button_cb.
  */
 ModuleRet ButtonMonitor_add_button(ButtonMonitor* const self,
                                    struct button_cb* const button_cb,

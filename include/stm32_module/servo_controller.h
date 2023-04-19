@@ -70,7 +70,7 @@ typedef struct servo_controller {
 
 /* constructor ---------------------------------------------------------------*/
 /**
- * @brief Constructor for ServoController class.
+ * @brief Constructor for ServoController.
  *
  * @param[in,out] self The instance of the class.
  * @return None.
@@ -86,7 +86,7 @@ void ServoController_ctor(ServoController* self);
  * @param[in] timer The timer for the servo.
  * @param[in] channel The timer channel for the servo.
  * @return ModuleRet Error code.
- * @note User is responsible for allocating memory for servo_cb.
+ * @note User is responsible for managing memory for servo_cb.
  */
 ModuleRet ServoController_add_servo(ServoController* const self,
                                     struct servo_cb* const servo_cb,

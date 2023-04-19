@@ -1,4 +1,5 @@
 // stl incldue
+#include <algorithm>
 #include <cstdint>
 
 extern "C" {
@@ -16,13 +17,216 @@ extern "C" {
 #include "mock/mock.hpp"
 
 using ::testing::_;
+using ::testing::ArrayWithSize;
 using ::testing::Invoke;
 using ::testing::Test;
 using ::testing::WithArg;
 
 /* test parameters -----------------------------------------------------------*/
+// should be even number
+#define NUM_QUEUE_ITEM 10
+#define NUM_QUEUE_ITEM_OVER (2 * NUM_QUEUE_ITEM)
+#define QUEUE_ELEMENT_TYPE uint32_t
 #define NUM_LIST_ITEM 10
 #define REPEATED_TEST_TIMES 10
+
+#if 0
+
+/* queue test ----------------------------------------------------------------*/
+void Queue_print_queue(Queue* const self) {
+  printf("Queue size: %d, capacity: %d, head: %d, tail: %d\n", self->size_,
+         self->capacity_, self->head_, self->tail_);
+  for (int i = 0; i < self->capacity_; i++) {
+    printf("%d ", ((QUEUE_ELEMENT_TYPE*)self->buffer_)[i]);
+  }
+  printf("\n");
+}
+
+/* queue initialization test -------------------------------------------------*/
+TEST(QueueInitTest, QueueCtor) {
+  Queue queue;
+  QUEUE_ELEMENT_TYPE queue_buffer;
+
+  Queue_ctor(&queue, &queue_buffer, NUM_QUEUE_ITEM, sizeof(QUEUE_ELEMENT_TYPE));
+
+  EXPECT_EQ(Queue_get_size(&queue), 0);
+  EXPECT_EQ(Queue_get_capacity(&queue), NUM_QUEUE_ITEM);
+}
+
+/* queue enqueue dequeue test
+ * ------------------------------------------------*/
+class QueueEnqueueDequeueTest : public Test {
+ protected:
+  void SetUp() override {
+    Queue_ctor(&queue_, queue_buffer_, NUM_QUEUE_ITEM,
+               sizeof(QUEUE_ELEMENT_TYPE));
+
+    for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+      elements_[i] = i;
+    }
+    for (int i = 0; i < NUM_QUEUE_ITEM_OVER; i++) {
+      elements_over_[i] = i;
+    }
+  }
+
+  Queue queue_;
+
+  // initialize to 0 to avoid shadowing from previous tests
+  QUEUE_ELEMENT_TYPE queue_buffer_[NUM_QUEUE_ITEM] = {0},
+                     elements_[NUM_QUEUE_ITEM],
+                     elements_over_[NUM_QUEUE_ITEM_OVER],
+                     elements_out_[NUM_QUEUE_ITEM] = {0};
+};
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueDequeue) {
+  for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+    Queue_enqueue(&queue_, &elements_[i]);
+  }
+  for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+    EXPECT_EQ(Queue_dequeue(&queue_, &elements_out_[i]), 1);
+  }
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueAll) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM);
+  for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+    EXPECT_EQ(Queue_dequeue(&queue_, &elements_out_[i]), 1);
+  }
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, DequeueAll) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM);
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueAllWithLengthSmallerThanCapacity) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM / 2);
+  Queue_enqueue_all(&queue_, &elements_[NUM_QUEUE_ITEM / 2],
+                    NUM_QUEUE_ITEM / 2);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM);
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, DequeueAllWithLengthSmallerThanCapacity) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM / 2);
+  Queue_dequeue_all(&queue_, &elements_out_[NUM_QUEUE_ITEM / 2],
+                    NUM_QUEUE_ITEM / 2);
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueDequeueLoopAroundBuffer) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM / 2);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM / 2);
+  for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+    Queue_enqueue(&queue_, &elements_[i]);
+  }
+  for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+    Queue_dequeue(&queue_, &elements_out_[i]);
+  }
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueAllLoopAroundBuffer) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM / 2);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM / 2);
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM);
+  for (int i = 0; i < NUM_QUEUE_ITEM; i++) {
+    Queue_dequeue(&queue_, &elements_out_[i]);
+  }
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, DequeueAllLoopAroundBuffer) {
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM / 2);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM / 2);
+  Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM);
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueOverCapacity) {
+  for (int i = 0; i < NUM_QUEUE_ITEM_OVER; i++) {
+    Queue_enqueue(&queue_, &elements_over_[i]);
+  }
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM);
+
+  // the first NUM_QUEUE_ITEM_OVER - NUM_QUEUE_ITEM elements should be
+  // overwritten
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)&elements_over_[NUM_QUEUE_ITEM_OVER -
+                                                   NUM_QUEUE_ITEM],
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, DequeueEmpty) {
+  QUEUE_ELEMENT_TYPE element_out = 0x12345678;
+  EXPECT_EQ(Queue_dequeue(&queue_, &element_out), 0);
+  EXPECT_EQ(element_out, 0x12345678);
+}
+
+TEST_F(QueueEnqueueDequeueTest, EnqueueAllOverCapacity) {
+  Queue_enqueue_all(&queue_, elements_over_, NUM_QUEUE_ITEM_OVER);
+  Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM);
+
+  // the first NUM_QUEUE_ITEM_OVER - NUM_QUEUE_ITEM elements should be
+  // overwritten
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)&elements_over_[NUM_QUEUE_ITEM_OVER -
+                                                   NUM_QUEUE_ITEM],
+              ArrayWithSize(elements_out_, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, DequeueAllEmpty) {
+  QUEUE_ELEMENT_TYPE elements_out[NUM_QUEUE_ITEM];
+  std::fill(elements_out, elements_out + NUM_QUEUE_ITEM, 0x12345678);
+
+  Queue_dequeue_all(&queue_, elements_out, NUM_QUEUE_ITEM);
+
+  EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_out,
+              ArrayWithSize(elements_out, NUM_QUEUE_ITEM));
+}
+
+TEST_F(QueueEnqueueDequeueTest, RepeatedEnqueueDequeue) {
+  for (int i = 0; i < REPEATED_TEST_TIMES; i++) {
+    for (int j = 0; j < NUM_QUEUE_ITEM - 1; j++) {
+      Queue_enqueue(&queue_, &elements_[j]);
+    }
+    for (int j = 0; j < NUM_QUEUE_ITEM - 1; j++) {
+      Queue_dequeue(&queue_, &elements_out_[j]);
+    }
+    EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+                ArrayWithSize(elements_out_, NUM_QUEUE_ITEM - 1));
+  }
+}
+
+TEST_F(QueueEnqueueDequeueTest, RepeatedEnqueueAllDequeueAll) {
+  for (int i = 0; i < REPEATED_TEST_TIMES; i++) {
+    Queue_enqueue_all(&queue_, elements_, NUM_QUEUE_ITEM - 1);
+    Queue_dequeue_all(&queue_, elements_out_, NUM_QUEUE_ITEM - 1);
+    EXPECT_THAT((QUEUE_ELEMENT_TYPE*)elements_,
+                ArrayWithSize(elements_out_, NUM_QUEUE_ITEM - 1));
+  }
+}
+
+#endif
 
 /* list initialization test --------------------------------------------------*/
 TEST(ListInitTest, ListCtor) {
@@ -33,7 +237,7 @@ TEST(ListInitTest, ListCtor) {
   // really nothing to test
 }
 
-/* list not item test --------------------------------------------------------*/
+/* list no item test ---------------------------------------------------------*/
 class ListNoItemTest : public Test {
  protected:
   void SetUp() override { List_ctor(&list_); }
