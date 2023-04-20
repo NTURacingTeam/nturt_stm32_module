@@ -30,12 +30,20 @@ typedef struct filter {
 
 /// @brief Virtual table for Filter.
 struct FilterVtbl {
-  float (*update)(Filter*, float);
+  ModuleRet (*update)(Filter*, float, float*);
 
-  float (*get_filtered_data)(Filter*);
+  ModuleRet (*get_filtered_data)(Filter*, float*);
 };
 
 /* constructor ---------------------------------------------------------------*/
+/**
+ * @brief Constructor for Filter.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] chained_filter The chained filter will be processed before this
+ * filter, NULL if no chained filter.
+ * @return None.
+ */
 void Filter_ctor(Filter* const self, Filter* const chained_filter);
 
 /* member function -----------------------------------------------------------*/
@@ -45,17 +53,22 @@ void Filter_ctor(Filter* const self, Filter* const chained_filter);
  *
  * @param[in,out] self The instance of the class.
  * @param[in] data The data to be added.
- * @return float The filtered data.
+ * @param[out] filtered_data The filtered data, NULL if no need to get filtered
+ * data.
+ * @return ModuleRet Error code.
  */
-float Filter_update(Filter* const self, const float data);
+ModuleRet Filter_update(Filter* const self, const float data,
+                        float* const filtered_data);
 
 /**
  * @brief Function for getting the current filtered data.
  *
  * @param[in,out] self The instance of the class.
- * @return float The filtered data.
+ * @param[out] filtered_data The filtered data.
+ * @return ModuleRet Error code.
  */
-float Filter_get_filtered_data(Filter* const self);
+ModuleRet Filter_get_filtered_data(Filter* const self,
+                                   float* const filtered_data);
 
 /* class ---------------------------------------------------------------------*/
 typedef struct moving_average_filter {
@@ -96,18 +109,23 @@ void MovingAverageFilter_ctor(MovingAverageFilter* const self,
  *
  * @param[in,out] self The instance of the class.
  * @param[in] data The data to be added.
- * @return float The filtered data.
+ * @param[out] filtered_data The filtered data, NULL if no need to get filtered
+ * data.
+ * @return ModuleRet Error code.
  */
-float MovingAverageFilter_update(MovingAverageFilter* const self,
-                                 const float data);
+ModuleRet MovingAverageFilter_update(MovingAverageFilter* const self,
+                                     const float data,
+                                     float* const filtered_data);
 
 /**
  * @brief Function for getting the current filtered data.
  *
  * @param[in,out] self The instance of the class.
- * @return float The filtered data.
+ * @param[out] filtered_data The filtered data.
+ * @return ModuleRet Error code.
  */
-float MovingAverageFilter_get_filtered_data(MovingAverageFilter* const self);
+ModuleRet MovingAverageFilter_get_filtered_data(MovingAverageFilter* const self,
+                                                float* const filtered_data);
 
 /* class ---------------------------------------------------------------------*/
 typedef struct normalize_filter {
@@ -116,9 +134,9 @@ typedef struct normalize_filter {
 
   float filtered_data_;
 
-  float upper_bound_;
-
   float lower_bound_;
+
+  float upper_bound_;
 } NormalizeFilter;
 
 /* constructor ---------------------------------------------------------------*/
@@ -126,14 +144,14 @@ typedef struct normalize_filter {
  * @brief Constructor for NormalizeFilter.
  *
  * @param[in,out] self The instance of the class.
- * @param[in] upper_bound The initial upper bound of the filter.
  * @param[in] lower_bound The initial lower bound of the filter.
+ * @param[in] upper_bound The initial upper bound of the filter.
  * @param[in] chained_filter The chained filter will be processed before this
  * filter, NULL if no chained filter.
  * @return None.
  */
-void NormalizeFilter_ctor(NormalizeFilter* const self, const float upper_bound,
-                          const float lower_bound,
+void NormalizeFilter_ctor(NormalizeFilter* const self, const float lower_bound,
+                          const float upper_bound,
                           Filter* const chained_filter);
 
 /* member function -----------------------------------------------------------*/
@@ -143,17 +161,22 @@ void NormalizeFilter_ctor(NormalizeFilter* const self, const float upper_bound,
  *
  * @param[in,out] self The instance of the class.
  * @param[in] data The data to be added.
- * @return float The filtered data.
+ * @param[out] filtered_data The filtered data, NULL if no need to get filtered
+ * data.
+ * @return ModuleRet Error code.
  */
-float NormalizeFilter_update(NormalizeFilter* const self, const float data);
+ModuleRet NormalizeFilter_update(NormalizeFilter* const self, const float data,
+                                 float* const filtered_data);
 
 /**
  * @brief Function for getting the current filtered data.
  *
  * @param[in,out] self The instance of the class.
- * @return float The filtered data.
+ * @param[out] filtered_data The filtered data.
+ * @return ModuleRet Error code.
  */
-float NormalizeFilter_get_filtered_data(NormalizeFilter* const self);
+ModuleRet NormalizeFilter_get_filtered_data(NormalizeFilter* const self,
+                                            float* const filtered_data);
 
 /* class ---------------------------------------------------------------------*/
 /**
