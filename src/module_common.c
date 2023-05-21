@@ -7,6 +7,7 @@
 
 // freertos include
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "task.h"
 
 /* function ------------------------------------------------------------------*/
@@ -220,6 +221,30 @@ void *ListIter_next(ListIter *const self) {
   void *const data = self->index_->data;
   self->index_ = self->index_->next;
   return data;
+}
+
+/* constructor ---------------------------------------------------------------*/
+void SharedResource_ctor(SharedResource *const self, void *const resource) {
+  module_assert(IS_NOT_NULL(self));
+
+  // initialize member variable
+  self->resource_ = resource;
+  self->mutex_handle_ =
+      xSemaphoreCreateMutexStatic(&self->mutex_control_block_);
+}
+
+/* member function -----------------------------------------------------------*/
+void *SharedResource_access(SharedResource *const self) {
+  module_assert(IS_NOT_NULL(self));
+
+  xSemaphoreTake(self->mutex_handle_, portMAX_DELAY);
+  return self->resource_;
+}
+
+void SharedResource_end_access(SharedResource *const self) {
+  module_assert(IS_NOT_NULL(self));
+
+  xSemaphoreGive(self->mutex_handle_);
 }
 
 /* virtual function redirection ----------------------------------------------*/

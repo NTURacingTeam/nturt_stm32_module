@@ -25,6 +25,7 @@ extern "C" {
 
 /* macro ---------------------------------------------------------------------*/
 // parameter
+#define LED_CONTROLLER_TASK_PRIORITY TaskPriorityLow
 #define LED_CONTROLLER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define LED_CONTROLLER_TASK_PERIOD 10
 

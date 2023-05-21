@@ -18,7 +18,9 @@ extern "C" {
 
 using ::testing::_;
 using ::testing::ArrayWithSize;
+using ::testing::InSequence;
 using ::testing::Invoke;
+using ::testing::Return;
 using ::testing::Test;
 using ::testing::WithArg;
 
@@ -279,7 +281,7 @@ TEST_F(ListPushBackTest, OutOfRangeAt) {
 }
 
 /* list iterator initialization test -----------------------------------------*/
-TEST(ListItorTest, ListItorCtor) {
+TEST(ListIterInitTest, ListIterCtor) {
   List list;
   ListIter list_iter;
 
@@ -332,6 +334,48 @@ TEST_F(ListIterTest, CtorReset) {
   for (int i = 0; i < NUM_LIST_ITEM; i++) {
     EXPECT_EQ(ListIter_next(&list_iter_), (void*)i);
   }
+}
+
+/* SharedResource test
+ * -------------------------------------------------------------*/
+class SharedResourceTest : public Test {
+ protected:
+  void SetUp() override {
+    // xSemaphoreCreateMutexStatic() macro expends to xQueueCreateMutexStatic()
+    EXPECT_CALL(freertos_mock_,
+                xQueueCreateMutexStatic(queueQUEUE_TYPE_MUTEX, _))
+        .WillOnce(Return(mutex_));
+
+    SharedResource_ctor(&can_resource_, resource_);
+  }
+
+  SharedResource can_resource_;
+
+  // fake resource pointer
+  void* const resource_ = (void*)0x12345678UL;
+
+  // fake mutex handle
+  QueueHandle_t mutex_ = (QueueHandle_t)0x87654321UL;
+
+  FreertosMock freertos_mock_;
+};
+
+TEST_F(SharedResourceTest, AccessTest) {
+  {
+    // force to expect ordered call
+    InSequence seq;
+    // xSemaphoreTake() macro expends to xQueueSemaphoreTake()
+    EXPECT_CALL(freertos_mock_, xQueueSemaphoreTake(mutex_, portMAX_DELAY))
+        .WillOnce(Return(pdTRUE));
+    // xSemaphoreGive() macro expends to xQueueGenericSend()
+    EXPECT_CALL(freertos_mock_,
+                xQueueGenericSend((QueueHandle_t)mutex_, NULL,
+                                  semGIVE_BLOCK_TIME, queueSEND_TO_BACK))
+        .WillOnce(Return(pdTRUE));
+  }
+
+  EXPECT_EQ(SharedResource_access(&can_resource_), resource_);
+  SharedResource_end_access(&can_resource_);
 }
 
 /* task initialization test --------------------------------------------------*/

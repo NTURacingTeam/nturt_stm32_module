@@ -16,6 +16,7 @@ extern "C" {
 
 /* macro ---------------------------------------------------------------------*/
 // parameter
+#define SERVO_CONTROLLER_TASK_PRIORITY TaskPriorityLow
 #define SERVO_CONTROLLER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define SERVO_CONTROLLER_TASK_PERIOD 10
 #define SERVO_TIMER_PRESCALER 50000

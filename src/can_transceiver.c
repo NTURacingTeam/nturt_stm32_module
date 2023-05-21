@@ -10,7 +10,6 @@
 
 // freertos include
 #include "FreeRTOS.h"
-#include "semphr.h"
 #include "task.h"
 #include "timers.h"
 
@@ -27,7 +26,7 @@ static List can_transceiver_list;
  * initializing can_transceiver_list.
  *
  * This variable is not set to static since it has to be reset to true for
- * testing.
+ * testing purposes.
  */
 /*static*/ bool is_first_can_transceiver = true;
 
@@ -71,7 +70,7 @@ ModuleRet __CanTransceiver_start(Task* const _self) {
 
   CanTransceiver_configure(self);
   Task_create_freertos_task((Task*)self, "can_transceiver",
-                            TaskPriorityAboveNormal, self->task_stack_,
+                            CAN_TRANSCEIVER_TASK_PRIORITY, self->task_stack_,
                             CAN_TRANSCEIVER_TASK_STACK_SIZE);
   return ModuleOK;
 }
@@ -239,30 +238,6 @@ void CanTransceiver_task_code(void* const _self) {
 
     vTaskDelayUntil(&last_wake, CAN_TRANSCEIVER_TASK_PERIOD);
   }
-}
-
-/* constructor ---------------------------------------------------------------*/
-void CanFrame_ctor(CanFrame* const self, void* const frame) {
-  module_assert(IS_NOT_NULL(self));
-
-  // initialize member variable
-  self->frame_ = frame;
-  self->mutex_handle_ =
-      xSemaphoreCreateMutexStatic(&self->mutex_control_block_);
-}
-
-/* member function -----------------------------------------------------------*/
-void* CanFrame_access(CanFrame* const self) {
-  module_assert(IS_NOT_NULL(self));
-
-  xSemaphoreTake(self->mutex_handle_, portMAX_DELAY);
-  return self->frame_;
-}
-
-void CanFrame_end_access(CanFrame* const self) {
-  module_assert(IS_NOT_NULL(self));
-
-  xSemaphoreGive(self->mutex_handle_);
 }
 
 /* static and callback function ----------------------------------------------*/

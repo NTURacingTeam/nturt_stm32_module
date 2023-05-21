@@ -24,9 +24,9 @@ ModuleRet __ServoController_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ServoController* const self = (ServoController*)_self;
-  return Task_create_freertos_task((Task*)self, "servo_controller",
-                                   TaskPriorityLow, self->task_stack_,
-                                   SERVO_CONTROLLER_TASK_STACK_SIZE);
+  return Task_create_freertos_task(
+      (Task*)self, "servo_controller", SERVO_CONTROLLER_TASK_PRIORITY,
+      self->task_stack_, SERVO_CONTROLLER_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/

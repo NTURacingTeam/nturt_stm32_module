@@ -16,6 +16,7 @@ extern "C" {
 
 // freertos include
 #include "FreeRTOS.h"
+#include "semphr.h"
 #include "task.h"
 
 /* macro ---------------------------------------------------------------------*/
@@ -258,6 +259,46 @@ void ListIter_ctor(ListIter* const self, List* const list);
  * @warning This function is not thread safe.
  */
 void* ListIter_next(ListIter* const self);
+
+/* class ---------------------------------------------------------------------*/
+typedef struct shared_resource {
+  void* resource_;
+
+  SemaphoreHandle_t mutex_handle_;
+
+  StaticSemaphore_t mutex_control_block_;
+} SharedResource;
+
+/* constructor ---------------------------------------------------------------*/
+/**
+ * @brief Constructor for SharedResource.
+ *
+ * @param[in,out] self The instance of the class.
+ * @param[in] resource Pointer to the shared resource.
+ * @return None.
+ */
+void SharedResource_ctor(SharedResource* const self, void* const resource);
+
+/* member function -----------------------------------------------------------*/
+/**
+ * @brief Function for accessing the shared resource.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return void* Pointer to resource.
+ * @warning This function must be accompanied by SharedResource_end_access()
+ * after accessing the resource.
+ */
+void* SharedResource_access(SharedResource* const self);
+
+/**
+ * @brief Function for ending access to the shared resource.
+ *
+ * @param[in,out] self The instance of the class.
+ * @return None.
+ * @warning This function must be called after finished accessing resource by
+ * SharedResource_access().
+ */
+void SharedResource_end_access(SharedResource* const self);
 
 /* abstract class ------------------------------------------------------------*/
 // forward declaration

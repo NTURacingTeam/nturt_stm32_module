@@ -24,9 +24,9 @@ ModuleRet __ErrorHandler_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ErrorHandler* const self = (ErrorHandler*)_self;
-  return Task_create_freertos_task((Task*)self, "error_handler",
-                                   TaskPriorityRealtime, self->task_stack_,
-                                   ERROR_HANDLER_TASK_STACK_SIZE);
+  return Task_create_freertos_task(
+      (Task*)self, "error_handler", ERROR_HANDLER_TASK_PRIORITY,
+      self->task_stack_, ERROR_HANDLER_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/

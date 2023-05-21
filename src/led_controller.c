@@ -24,9 +24,9 @@ ModuleRet __LedController_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   LedController* const self = (LedController*)_self;
-  return Task_create_freertos_task((Task*)self, "led_controller",
-                                   TaskPriorityLow, self->task_stack_,
-                                   LED_CONTROLLER_TASK_STACK_SIZE);
+  return Task_create_freertos_task(
+      (Task*)self, "led_controller", LED_CONTROLLER_TASK_PRIORITY,
+      self->task_stack_, LED_CONTROLLER_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/

@@ -37,8 +37,6 @@ Note: Assertion of function parameter checking is not tested.
   - Transmit
   - Receive
   - ReceiveHighPriorityMessage
-- CanFrameTest
-  - AccessTest
 
 ### error_handler
 
@@ -74,6 +72,27 @@ Note: Assertion of function parameter checking is not tested.
   - BlinkLedWhileOn
   - TurnOnLedWhileBlinking
   - TurnOffLedWhileBlinking
+
+### module_common
+- ListNoItemTest
+  - Size
+  - At
+- ListPushBackTest
+  - Size
+  - At
+  - OutOfRangeAt
+- ListIterInitTest
+  - ListIterCtor
+- ListIterTest
+  - Next
+  - OutOfRangeNext
+  - CtorReset
+- SharedResourceTest
+  - AccessTest
+- TaskInitTest
+  - TaskCtor
+- TaskTest
+  - StartFreertosTask
 
 ## ATTENTION
 

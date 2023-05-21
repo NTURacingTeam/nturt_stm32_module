@@ -22,6 +22,7 @@ extern "C" {
 
 /* macro ---------------------------------------------------------------------*/
 // parmeter
+#define ERROR_HANDLER_TASK_PRIORITY TaskPriorityRealtime
 #define ERROR_HANDLER_TASK_STACK_SIZE (8 * configMINIMAL_STACK_SIZE)
 
 #define MAX_ERROR_CODE_BITS 31UL

@@ -21,9 +21,9 @@ ModuleRet __ButtonMonitor_start(Task* const _self) {
   module_assert(IS_NOT_NULL(_self));
 
   ButtonMonitor* const self = (ButtonMonitor*)_self;
-  return Task_create_freertos_task((Task*)self, "button_monitor",
-                                   TaskPriorityLow, self->task_stack_,
-                                   BUTTON_MONITOR_TASK_STACK_SIZE);
+  return Task_create_freertos_task(
+      (Task*)self, "button_monitor", BUTTON_MONITOR_TASK_PRIORITY,
+      self->task_stack_, BUTTON_MONITOR_TASK_STACK_SIZE);
 }
 
 /* constructor ---------------------------------------------------------------*/

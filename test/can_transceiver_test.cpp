@@ -440,45 +440,4 @@ TEST_F(MultiCanTransceiver, ReceiveHighPriorityMessage) {
   }
 }
 
-/*CanFrame test --------------------------------------------------------------*/
-class CanFrameTest : public Test {
- protected:
-  void SetUp() override {
-    // xSemaphoreCreateMutexStatic() macro expends to xQueueCreateMutexStatic()
-    EXPECT_CALL(freertos_mock_,
-                xQueueCreateMutexStatic(queueQUEUE_TYPE_MUTEX, _))
-        .WillOnce(Return(mutex_));
-
-    CanFrame_ctor(&can_frame_, frame_);
-  }
-
-  CanFrame can_frame_;
-
-  // fake frame pointer
-  void* const frame_ = (void*)0x12345678UL;
-
-  // fake mutex handle
-  QueueHandle_t mutex_ = (QueueHandle_t)0x87654321UL;
-
-  FreertosMock freertos_mock_;
-};
-
-TEST_F(CanFrameTest, AccessTest) {
-  {
-    // force to expect ordered call
-    InSequence seq;
-    // xSemaphoreTake() macro expends to xQueueSemaphoreTake()
-    EXPECT_CALL(freertos_mock_, xQueueSemaphoreTake(mutex_, portMAX_DELAY))
-        .WillOnce(Return(pdTRUE));
-    // xSemaphoreGive() macro expends to xQueueGenericSend()
-    EXPECT_CALL(freertos_mock_,
-                xQueueGenericSend((QueueHandle_t)mutex_, NULL,
-                                  semGIVE_BLOCK_TIME, queueSEND_TO_BACK))
-        .WillOnce(Return(pdTRUE));
-  }
-
-  EXPECT_EQ(CanFrame_access(&can_frame_), frame_);
-  CanFrame_end_access(&can_frame_);
-}
-
 int main(int argc, char** argv) { return mock::run_freertos_test(&argc, argv); }

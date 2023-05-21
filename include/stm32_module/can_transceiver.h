@@ -20,13 +20,13 @@ extern "C" {
 
 // freertos include
 #include "FreeRTOS.h"
-#include "semphr.h"
 
 // stm32_module include
 #include "stm32_module/module_common.h"
 
 /* macro ---------------------------------------------------------------------*/
 // parmeter
+#define CAN_TRANSCEIVER_TASK_PRIORITY TaskPriorityAboveNormal
 #define CAN_TRANSCEIVER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define CAN_TRANSCEIVER_TASK_PERIOD 5
 
@@ -164,46 +164,6 @@ ModuleRet CanTransceiver_periodic_update(CanTransceiver* const self,
                                          const TickType_t current_tick);
 
 void CanTransceiver_task_code(void* const self);
-
-/* class ---------------------------------------------------------------------*/
-typedef struct can_frame {
-  void* frame_;
-
-  SemaphoreHandle_t mutex_handle_;
-
-  StaticSemaphore_t mutex_control_block_;
-} CanFrame;
-
-/* constructor ---------------------------------------------------------------*/
-/**
- * @brief Constructor for CanFrame.
- *
- * @param[in,out] self The instance of the class.
- * @param[in] frame Pointer to the frame struct.
- * @return None.
- */
-void CanFrame_ctor(CanFrame* const self, void* const frame);
-
-/* member function -----------------------------------------------------------*/
-/**
- * @brief Function for accessing the frame struct.
- *
- * @param[in,out] self The instance of the class.
- * @return void* Pointer to frame struct.
- * @warning This function must be accompanied by CanFrame_end_access() after
- * accessing the frame.
- */
-void* CanFrame_access(CanFrame* const self);
-
-/**
- * @brief Function for ending access to the frame struct.
- *
- * @param[in,out] self The instance of the class.
- * @return None.
- * @warning This function must be called after finished accessing frame by
- * CanFrame_access().
- */
-void CanFrame_end_access(CanFrame* const self);
 
 #ifdef __cplusplus
 }
