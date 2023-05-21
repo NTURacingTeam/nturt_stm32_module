@@ -75,7 +75,7 @@ ModuleRet __CanTransceiver_start(Task* const _self) {
   return ModuleOK;
 }
 
-// default to do nothing
+// from CanTransceiver base class, default to do nothing
 ModuleRet __CanTransceiver_configure(CanTransceiver* const self) {
   (void)self;
   return ModuleOK;
@@ -294,14 +294,16 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
     CanTransceiver* transceiver;
     ListIter can_iter;
     ListIter_ctor(&can_iter, &can_transceiver_list);
+    taskENTER_CRITICAL_FROM_ISR();
     do {
       transceiver = (CanTransceiver*)ListIter_next(&can_iter);
       if (transceiver == NULL) {
         module_assert(0);
       }
     } while (transceiver->can_handle_ != hfdcan);
-
     BaseType_t require_contex_switch = pdFALSE;
+    taskEXIT_CRITICAL_FROM_ISR(&require_contex_switch);
+
     xTimerPendFunctionCallFromISR(received_hp_deferred, (void*)transceiver, 0,
                                   &require_contex_switch);
     portYIELD_FROM_ISR(require_contex_switch);
