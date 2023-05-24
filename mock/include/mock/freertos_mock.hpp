@@ -1,5 +1,5 @@
-#ifndef FREERTOS_MOCK_HPP
-#define FREERTOS_MOCK_HPP
+#ifndef STM32_MODULE_FREERTOS_MOCK_HPP
+#define STM32_MODULE_FREERTOS_MOCK_HPP
 
 // stl include
 #include <cstdint>
@@ -125,4 +125,4 @@ class FreertosMock : public CMockMocker<FreertosMock> {
                     (QueueHandle_t, void* const, TickType_t));
 };
 
-#endif  // FREERTOS_MOCK_HPP
+#endif  // STM32_MODULE_FREERTOS_MOCK_HPP

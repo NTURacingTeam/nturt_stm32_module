@@ -4,8 +4,8 @@
  * @brief Common header for all modules.
  */
 
-#ifndef MODULE_COMMON_H
-#define MODULE_COMMON_H
+#ifndef STM32_MODULE_MODULE_COMMON_H
+#define STM32_MODULE_MODULE_COMMON_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -376,4 +376,4 @@ ModuleRet Task_delete(Task* const self);
 }
 #endif
 
-#endif  // MODULE_COMMON_H
+#endif  // STM32_MODULE_MODULE_COMMON_H

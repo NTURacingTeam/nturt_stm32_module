@@ -4,8 +4,8 @@
  * @brief STM32 mcu module for controlling led.
  */
 
-#ifndef LED_CONTROLLER_H
-#define LED_CONTROLLER_H
+#ifndef STM32_MODULE_LED_CONTROLLER_H
+#define STM32_MODULE_LED_CONTROLLER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -149,4 +149,4 @@ void LedController_task_code(void* const _self);
 }
 #endif
 
-#endif  // LED_CONTROLLER_H
+#endif  // STM32_MODULE_LED_CONTROLLER_H

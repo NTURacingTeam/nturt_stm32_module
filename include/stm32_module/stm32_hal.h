@@ -4,8 +4,8 @@
  * @brief Convenient header files for STM32 HAL library.
  */
 
-#ifndef STM32_HAL_H
-#define STM32_HAL_H
+#ifndef STM32_MODULE_STM32_HAL_H
+#define STM32_MODULE_STM32_HAL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,4 +23,4 @@ extern "C" {
 }
 #endif
 
-#endif  // STM32_HAL_H
+#endif  // STM32_MODULE_STM32_HAL_H

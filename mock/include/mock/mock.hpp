@@ -1,5 +1,5 @@
-#ifndef MOCK_HPP
-#define MOCK_HPP
+#ifndef STM32_MODULE_MOCK_HPP
+#define STM32_MODULE_MOCK_HPP
 
 #include "mock/can_transceiver_mock.hpp"
 #include "mock/cmsis_os2_mock.hpp"
@@ -9,4 +9,4 @@
 #include "mock/hal_timer_mock.hpp"
 #include "mock/mock_common.hpp"
 
-#endif  // MOCK_HPP
+#endif  // STM32_MODULE_MOCK_HPP

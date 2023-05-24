@@ -106,9 +106,8 @@ void ErrorHandler_task_code(void* const _self) {
 
   while (1) {
     uint32_t error_code;
-    xTaskNotifyWait(0, ERROR_CODE_ALL | ERROR_OPTION_SET, &error_code,
-                    portMAX_DELAY);
-    if (error_code & ERROR_OPTION_SET) {
+    xTaskNotifyWait(0, ERROR_CODE_ALL | ERROR_SET, &error_code, portMAX_DELAY);
+    if (error_code & ERROR_SET) {
       self->error_code_ |= error_code & ERROR_CODE_ALL;
     } else {
       self->error_code_ &= ~(error_code & ERROR_CODE_ALL);

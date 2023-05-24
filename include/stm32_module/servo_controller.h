@@ -1,5 +1,10 @@
-#ifndef SERVO_CONTROLLER_H
-#define SERVO_CONTROLLER_H
+/**
+ * @file servo_controller.h
+ * @author QuantumSpawner jet22854111@gmail.com
+ * @brief STM32 mcu module for controlling servo.
+ */
+#ifndef STM32_MODULE_SERVO_CONTROLLER_H
+#define STM32_MODULE_SERVO_CONTROLLER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -141,4 +146,4 @@ void ServoController_task_code(void* const _self);
 }
 #endif
 
-#endif  // SERVO_CONTROLLER_H
+#endif  // STM32_MODULE_SERVO_CONTROLLER_H

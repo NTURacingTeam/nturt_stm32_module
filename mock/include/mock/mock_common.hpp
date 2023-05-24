@@ -1,5 +1,5 @@
-#ifndef MOCK_COMMON_HPP
-#define MOCK_COMMON_HPP
+#ifndef STM32_MODULE_MOCK_COMMON_HPP
+#define STM32_MODULE_MOCK_COMMON_HPP
 
 // stl include
 #include <atomic>
@@ -286,4 +286,4 @@ class FreertosSimulator {
 
 }  // namespace mock
 
-#endif  // MOCK_COMMON_HPP
+#endif  // STM32_MODULE_MOCK_COMMON_HPP

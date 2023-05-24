@@ -1,5 +1,5 @@
-#ifndef STM32_MODULE_H
-#define STM32_MODULE_H
+#ifndef STM32_MODULE_STM32_MODULE_H
+#define STM32_MODULE_STM32_MODULE_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,4 +17,4 @@ extern "C" {
 }
 #endif
 
-#endif  // STM32_MODULE_H
+#endif  // STM32_MODULE_STM32_MODULE_H
