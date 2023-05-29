@@ -39,8 +39,8 @@ extern "C" {
 #define ERROR_CODE_CAN_RECEIVE_TIMEOUT_WARN 0x00000010UL
 
 // error_code_option
-#define ERROR_OPTION_SET (1UL << MAX_ERROR_CODE_BITS)
-#define ERROR_OPTION_CLEAR 0UL
+#define ERROR_SET (1UL << MAX_ERROR_CODE_BITS)
+#define ERROR_CLEAR 0UL
 
 // assert macro
 #define IS_ERROR_CODE(CODE)                                                \
@@ -48,7 +48,7 @@ extern "C" {
    (ERROR_CODE_CAN_TRANSMIT_ERROR | ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR | \
     ERROR_CODE_CAN_RECEIVE_TIMEOUT_WARN))
 #define IS_ERROR_OPTION(CODE_WRITE) \
-  (((CODE_WRITE) == ERROR_OPTION_SET) || ((CODE_WRITE) == ERROR_OPTION_CLEAR))
+  (((CODE_WRITE) == ERROR_SET) || ((CODE_WRITE) == ERROR_CLEAR))
 
 /* type ----------------------------------------------------------------------*/
 typedef void (*ErrorCallback_t)(void*, uint32_t);

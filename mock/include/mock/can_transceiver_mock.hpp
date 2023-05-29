@@ -1,5 +1,5 @@
-#ifndef CAN_TRANSCEIVER_MOCK_HPP
-#define CAN_TRANSCEIVER_MOCK_HPP
+#ifndef STM32_MODULE_CAN_TRANSCEIVER_MOCK_HPP
+#define STM32_MODULE_CAN_TRANSCEIVER_MOCK_HPP
 
 extern "C" {
 // stm32_module include
@@ -61,4 +61,4 @@ class CanTransceiverMock : public CMockMocker<CanTransceiverMock> {
                     (CanTransceiver*, TickType_t));
 };
 
-#endif  // CAN_TRANSCEIVER_MOCK_HPP
+#endif  // STM32_MODULE_CAN_TRANSCEIVER_MOCK_HPP

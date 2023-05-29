@@ -1,5 +1,5 @@
-#ifndef CMSIS_OS2_MOCK_HPP
-#define CMSIS_OS2_MOCK_HPP
+#ifndef STM32_MODULE_CMSIS_OS2_MOCK_HPP
+#define STM32_MODULE_CMSIS_OS2_MOCK_HPP
 
 // stl include
 #include <cstdint>
@@ -69,4 +69,4 @@ class CmsisOs2Mock : public CMockMocker<CmsisOs2Mock> {
                     (osMessageQueueId_t, void *, uint8_t *, uint32_t));
 };
 
-#endif  // CMSIS_OS2_MOCK_HPP
+#endif  // STM32_MODULE_CMSIS_OS2_MOCK_HPP

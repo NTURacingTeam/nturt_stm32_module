@@ -1,5 +1,5 @@
-#ifndef HAL_TIMER_MOCK_HPP
-#define HAL_TIMER_MOCK_HPP
+#ifndef STM32_MODULE_HAL_TIMER_MOCK_HPP
+#define STM32_MODULE_HAL_TIMER_MOCK_HPP
 
 // stl include
 #include <cstdint>
@@ -23,4 +23,4 @@ class HAL_TIMMock : public CMockMocker<HAL_TIMMock> {
                     (TIM_HandleTypeDef *, uint32_t));
 };
 
-#endif  // HAL_TIMER_MOCK_HPP
+#endif  // STM32_MODULE_HAL_TIMER_MOCK_HPP

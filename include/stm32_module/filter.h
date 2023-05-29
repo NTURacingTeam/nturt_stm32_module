@@ -1,5 +1,11 @@
-#ifndef FILTER_H
-#define FILTER_H
+/**
+ * @file filter.h
+ * @author QuantumSpawner jet22854111@gmail.com
+ * @brief STM32 mcu module for filtering sensor signal.
+ */
+
+#ifndef STM32_MODULE_FILTER_H
+#define STM32_MODULE_FILTER_H
 
 // freertos include
 #include "FreeRTOS.h"
@@ -230,4 +236,4 @@ float KalmanFilter1D_get_state(KalmanFilter1D* const self);
  */
 float KalmanFilter1D_get_covariance(KalmanFilter1D* const self);
 
-#endif  // FILTER_H
+#endif  // STM32_MODULE_FILTER_H

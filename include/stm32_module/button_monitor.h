@@ -4,8 +4,8 @@
  * @brief STM32 module for monitoring button.
  */
 
-#ifndef BUTTON_MONITOR_H
-#define BUTTON_MONITOR_H
+#ifndef STM32_MODULE_BUTTON_MONITOR_H
+#define STM32_MODULE_BUTTON_MONITOR_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -140,4 +140,4 @@ void ButtonMonitor_task_code(void* const _self);
 }
 #endif
 
-#endif  // BUTTON_MONITOR_H
+#endif  // STM32_MODULE_BUTTON_MONITOR_H

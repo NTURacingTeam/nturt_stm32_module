@@ -1,5 +1,5 @@
-#ifndef HAL_GPIO_MOCK_HPP
-#define HAL_GPIO_MOCK_HPP
+#ifndef STM32_MODULE_HAL_GPIO_MOCK_HPP
+#define STM32_MODULE_HAL_GPIO_MOCK_HPP
 
 // glibc include
 #include <cstdint>
@@ -29,4 +29,4 @@ class HAL_GPIOMock : public CMockMocker<HAL_GPIOMock> {
   CMOCK_MOCK_METHOD(void, HAL_GPIO_TogglePin, (GPIO_TypeDef *, uint16_t));
 };
 
-#endif  // HAL_GPIO_MOCK_HPP
+#endif  // STM32_MODULE_HAL_GPIO_MOCK_HPP

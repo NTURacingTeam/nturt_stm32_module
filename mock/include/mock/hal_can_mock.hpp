@@ -1,5 +1,5 @@
-#ifndef HAL_CAN_MOCK_HPP
-#define HAL_CAN_MOCK_HPP
+#ifndef STM32_MODULE_HAL_CAN_MOCK_HPP
+#define STM32_MODULE_HAL_CAN_MOCK_HPP
 
 // stl include
 #include <cstdint>
@@ -47,4 +47,4 @@ class HAL_CANMock : public CMockMocker<HAL_CANMock> {
 #endif  // HAL_FDCAN_MODULE_ENABLED
 };
 
-#endif  // HAL_CAN_MOCK_HPP
+#endif  // STM32_MODULE_HAL_CAN_MOCK_HPP

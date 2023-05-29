@@ -4,8 +4,8 @@
  * @brief STM32 mcu module for transceiving can signal.
  */
 
-#ifndef CAN_TRANSCEIVER_H
-#define CAN_TRANSCEIVER_H
+#ifndef STM32_MODULE_CAN_TRANSCEIVER_H
+#define STM32_MODULE_CAN_TRANSCEIVER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -169,4 +169,4 @@ void CanTransceiver_task_code(void* const self);
 }
 #endif
 
-#endif  // CAN_TRANSCEIVER_H
+#endif  // STM32_MODULE_CAN_TRANSCEIVER_H

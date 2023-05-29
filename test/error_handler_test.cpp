@@ -42,7 +42,7 @@ class ErrorHandlerStartTest : public Test {
 TEST_F(ErrorHandlerStartTest, WriteGetErrorCodeWhileNotStarted) {
   uint32_t error_code = 0x12345678;
   EXPECT_EQ(
-      ErrorHandler_write_error(&error_handler_, error_code, ERROR_OPTION_SET),
+      ErrorHandler_write_error(&error_handler_, error_code, ERROR_SET),
       ModuleError);
   EXPECT_EQ(ErrorHandler_get_error(&error_handler_, &error_code), ModuleError);
   EXPECT_EQ(error_code, 0x12345678);
@@ -76,14 +76,14 @@ TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerWriteError) {
   EXPECT_EQ(ErrorHandler_write_error(&error_handler_,
                                      ERROR_CODE_CAN_TRANSMIT_ERROR |
                                          ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR,
-                                     ERROR_OPTION_SET),
+                                     ERROR_SET),
             ModuleOK);
   EXPECT_EQ(ErrorHandler_get_error(&error_handler_, &error_code_), ModuleOK);
   EXPECT_EQ(error_code_, ERROR_CODE_CAN_TRANSMIT_ERROR |
                              ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
 
   ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
-                           ERROR_OPTION_CLEAR);
+                           ERROR_CLEAR);
   ErrorHandler_get_error(&error_handler_, &error_code_);
   EXPECT_EQ(error_code_, ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
 }

@@ -294,16 +294,16 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
     CanTransceiver* transceiver;
     ListIter can_iter;
     ListIter_ctor(&can_iter, &can_transceiver_list);
-    taskENTER_CRITICAL_FROM_ISR();
+    UBaseType_t saved_interrupt_status = taskENTER_CRITICAL_FROM_ISR();
     do {
       transceiver = (CanTransceiver*)ListIter_next(&can_iter);
       if (transceiver == NULL) {
         module_assert(0);
       }
     } while (transceiver->can_handle_ != hfdcan);
-    BaseType_t require_contex_switch = pdFALSE;
-    taskEXIT_CRITICAL_FROM_ISR(&require_contex_switch);
+    taskEXIT_CRITICAL_FROM_ISR(saved_interrupt_status);
 
+    BaseType_t require_contex_switch = pdFALSE;
     xTimerPendFunctionCallFromISR(received_hp_deferred, (void*)transceiver, 0,
                                   &require_contex_switch);
     portYIELD_FROM_ISR(require_contex_switch);
