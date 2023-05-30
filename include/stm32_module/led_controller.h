@@ -130,7 +130,8 @@ ModuleRet LedController_turn_off(LedController* const self, const int led_num);
  * @param[in] period How long the led should blink in ms.
  * @return ModuleRet Error code.
  *
- * @note The time quantum to blink led is 10ms, unconditional carry.
+ * @note The time quantum to blink led is LED_CONTROLLER_TASK_PERIOD,
+ * unconditional carry.
  * @note When the led is already turned on, this function has no effect.
  */
 ModuleRet LedController_blink(LedController* const self, const int led_num,

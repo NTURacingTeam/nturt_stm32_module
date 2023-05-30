@@ -35,27 +35,27 @@ inline ModuleRet CanTransceiver_start(CanTransceiver* const self) {
   return self->super_.vptr_->start((Task*)self);
 }
 
-inline ModuleRet CanTransceiver_configure(CanTransceiver* const self) {
-  return self->vptr_->configure(self);
+inline void CanTransceiver_configure(CanTransceiver* const self) {
+  self->vptr_->configure(self);
 }
 
-inline ModuleRet CanTransceiver_receive(CanTransceiver* const self,
-                                        const bool is_extended,
-                                        const uint32_t id, const uint8_t dlc,
-                                        const uint8_t* const data) {
-  return self->vptr_->receive(self, is_extended, id, dlc, data);
+inline void CanTransceiver_receive(CanTransceiver* const self,
+                                   const bool is_extended, const uint32_t id,
+                                   const uint8_t dlc,
+                                   const uint8_t* const data) {
+  self->vptr_->receive(self, is_extended, id, dlc, data);
 }
 
-inline ModuleRet CanTransceiver_receive_hp(CanTransceiver* const self,
-                                           const bool is_extended,
-                                           const uint32_t id, const uint8_t dlc,
-                                           const uint8_t* const data) {
-  return self->vptr_->receive_hp(self, is_extended, id, dlc, data);
+inline void CanTransceiver_receive_hp(CanTransceiver* const self,
+                                      const bool is_extended, const uint32_t id,
+                                      const uint8_t dlc,
+                                      const uint8_t* const data) {
+  self->vptr_->receive_hp(self, is_extended, id, dlc, data);
 }
 
-inline ModuleRet CanTransceiver_periodic_update(CanTransceiver* const self,
-                                                const TickType_t current_tick) {
-  return self->vptr_->periodic_update(self, current_tick);
+inline void CanTransceiver_periodic_update(CanTransceiver* const self,
+                                           const TickType_t current_tick) {
+  self->vptr_->periodic_update(self, current_tick);
 }
 
 /* virtual function definition -----------------------------------------------*/
@@ -69,23 +69,19 @@ ModuleRet __CanTransceiver_start(Task* const _self) {
   }
 
   CanTransceiver_configure(self);
-  Task_create_freertos_task((Task*)self, "can_transceiver",
-                            CAN_TRANSCEIVER_TASK_PRIORITY, self->task_stack_,
-                            CAN_TRANSCEIVER_TASK_STACK_SIZE);
-  return ModuleOK;
+
+  return Task_create_freertos_task(
+      (Task*)self, "can_transceiver", CAN_TRANSCEIVER_TASK_PRIORITY,
+      self->task_stack_, CAN_TRANSCEIVER_TASK_STACK_SIZE);
 }
 
 // from CanTransceiver base class, default to do nothing
-ModuleRet __CanTransceiver_configure(CanTransceiver* const self) {
-  (void)self;
-  return ModuleOK;
-}
+void __CanTransceiver_configure(CanTransceiver* const self) { (void)self; }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_receive(CanTransceiver* const self,
-                                   const bool is_extended, const uint32_t id,
-                                   const uint8_t dlc,
-                                   const uint8_t* const data) {
+void __CanTransceiver_receive(CanTransceiver* const self,
+                              const bool is_extended, const uint32_t id,
+                              const uint8_t dlc, const uint8_t* const data) {
   (void)self;
   (void)is_extended;
   (void)id;
@@ -93,14 +89,12 @@ ModuleRet __CanTransceiver_receive(CanTransceiver* const self,
   (void)data;
 
   module_assert(0);
-  return ModuleError;
 }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_receive_hp(CanTransceiver* const self,
-                                      const bool is_extended, const uint32_t id,
-                                      const uint8_t dlc,
-                                      const uint8_t* const data) {
+void __CanTransceiver_receive_hp(CanTransceiver* const self,
+                                 const bool is_extended, const uint32_t id,
+                                 const uint8_t dlc, const uint8_t* const data) {
   (void)self;
   (void)is_extended;
   (void)id;
@@ -108,17 +102,15 @@ ModuleRet __CanTransceiver_receive_hp(CanTransceiver* const self,
   (void)data;
 
   module_assert(0);
-  return ModuleError;
 }
 
 // pure virtual function for CanTransceiver base class
-ModuleRet __CanTransceiver_periodic_update(CanTransceiver* const self,
-                                           const TickType_t current_tick) {
+void __CanTransceiver_periodic_update(CanTransceiver* const self,
+                                      const TickType_t current_tick) {
   (void)self;
   (void)current_tick;
 
   module_assert(0);
-  return ModuleError;
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -249,10 +241,7 @@ static void received_hp_deferred(void* const _self, const uint32_t argument) {
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header;
   uint8_t rx_data[8];
-  if (HAL_CAN_GetRxMessage(self->can_handle_, CAN_RX_FIFO1, &rx_header,
-                           rx_data) != HAL_OK) {
-    module_assert(0);
-  }
+  HAL_CAN_GetRxMessage(self->can_handle_, CAN_RX_FIFO1, &rx_header, rx_data);
   CanTransceiver_receive_hp(
       self, rx_header.IDE == CAN_ID_EXT,
       rx_header.IDE == CAN_ID_EXT ? rx_header.ExtId : rx_header.StdId,
@@ -260,10 +249,8 @@ static void received_hp_deferred(void* const _self, const uint32_t argument) {
 #elif defined(HAL_FDCAN_MODULE_ENABLED)
   FDCAN_RxHeaderTypeDef rx_header;
   uint8_t rx_data[8];
-  if (HAL_FDCAN_GetRxMessage(self->can_handle_, FDCAN_RX_FIFO1, &rx_header,
-                             rx_data) != HAL_OK) {
-    module_assert(0);
-  }
+  HAL_FDCAN_GetRxMessage(self->can_handle_, FDCAN_RX_FIFO1, &rx_header,
+                         rx_data);
   CanTransceiver_receive_hp(self, rx_header.IdType, rx_header.Identifier,
                             rx_header.DataLength >> 16, rx_data);
 #endif
@@ -298,7 +285,7 @@ void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
     do {
       transceiver = (CanTransceiver*)ListIter_next(&can_iter);
       if (transceiver == NULL) {
-        module_assert(0);
+        return;
       }
     } while (transceiver->can_handle_ != hfdcan);
     taskEXIT_CRITICAL_FROM_ISR(saved_interrupt_status);

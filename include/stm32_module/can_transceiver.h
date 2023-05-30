@@ -26,7 +26,7 @@ extern "C" {
 
 /* macro ---------------------------------------------------------------------*/
 // parmeter
-#define CAN_TRANSCEIVER_TASK_PRIORITY TaskPriorityAboveNormal
+#define CAN_TRANSCEIVER_TASK_PRIORITY TaskPriorityHigh
 #define CAN_TRANSCEIVER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 #define CAN_TRANSCEIVER_TASK_PERIOD 5
 
@@ -66,15 +66,13 @@ typedef struct can_transceiver {
 
 /// @brief Virtual table for CanTransceiver class.
 struct CanTransceiverVtbl {
-  ModuleRet (*configure)(CanTransceiver*);
+  void (*configure)(CanTransceiver*);
 
-  ModuleRet (*receive)(CanTransceiver*, bool, uint32_t, uint8_t,
-                       const uint8_t*);
+  void (*receive)(CanTransceiver*, bool, uint32_t, uint8_t, const uint8_t*);
 
-  ModuleRet (*receive_hp)(CanTransceiver*, bool, uint32_t, uint8_t,
-                          const uint8_t*);
+  void (*receive_hp)(CanTransceiver*, bool, uint32_t, uint8_t, const uint8_t*);
 
-  ModuleRet (*periodic_update)(CanTransceiver*, TickType_t);
+  void (*periodic_update)(CanTransceiver*, TickType_t);
 };
 
 /* constructor ---------------------------------------------------------------*/
@@ -98,13 +96,12 @@ void CanTransceiver_ctor(CanTransceiver* const self,
 ModuleRet CanTransceiver_start(CanTransceiver* const self);
 
 /**
- * @brief Function to configure can peripherial settings before starting.
+ * @brief Function to configure can peripherial settings when starting.
  *
  * @param[in,out] self The instance of the class.
- * @return ModuleRet Error code.
  * @note This function is virtual.
  */
-ModuleRet CanTransceiver_configure(CanTransceiver* const self);
+void CanTransceiver_configure(CanTransceiver* const self);
 
 /**
  * @brief Function for receiving can frame.
@@ -114,12 +111,11 @@ ModuleRet CanTransceiver_configure(CanTransceiver* const self);
  * @param[in] id ID of the frame.
  * @param[in] dlc Data length code.
  * @param[in] data Data of the frame.
- * @return ModuleRet Error code.
  * @note This function is virtual.
  */
-ModuleRet CanTransceiver_receive(CanTransceiver* const self,
-                                 const bool is_extended, const uint32_t id,
-                                 const uint8_t dlc, const uint8_t* const data);
+void CanTransceiver_receive(CanTransceiver* const self, const bool is_extended,
+                            const uint32_t id, const uint8_t dlc,
+                            const uint8_t* const data);
 
 /**
  * @brief Function for receiving high priority can frame.
@@ -129,13 +125,11 @@ ModuleRet CanTransceiver_receive(CanTransceiver* const self,
  * @param[in] id ID of the frame.
  * @param[in] dlc Data length code.
  * @param[in] data Data of the frame.
- * @return ModuleRet Error code.
  * @note This function is virtual.
  */
-ModuleRet CanTransceiver_receive_hp(CanTransceiver* const self,
-                                    const bool is_extended, const uint32_t id,
-                                    const uint8_t dlc,
-                                    const uint8_t* const data);
+void CanTransceiver_receive_hp(CanTransceiver* const self,
+                               const bool is_extended, const uint32_t id,
+                               const uint8_t dlc, const uint8_t* const data);
 
 /**
  * @brief Function for transmitting can frame.
@@ -157,12 +151,18 @@ ModuleRet CanTransceiver_transmit(CanTransceiver* const self,
  *
  * @param[in,out] self The instance of the class.
  * @param[in] current_tick Current tick time.
- * @return ModuleRet Error code.
  * @note This function is virtual.
  */
-ModuleRet CanTransceiver_periodic_update(CanTransceiver* const self,
-                                         const TickType_t current_tick);
+void CanTransceiver_periodic_update(CanTransceiver* const self,
+                                    const TickType_t current_tick);
 
+/**
+ * @brief Function to run in freertos task.
+ *
+ * @param[in,out] _self The instance of the class.
+ * @return None.
+ * @warning For internal use only.
+ */
 void CanTransceiver_task_code(void* const self);
 
 #ifdef __cplusplus

@@ -100,10 +100,9 @@ class CanTransceiverTransceiveTest : public Test {
     EXPECT_CALL(can_mock_, HAL_FDCAN_GetRxFifoFillLevel)
         .WillRepeatedly(Return(0));
 #endif
-    EXPECT_CALL(can_transceiver_mock_, __TestCan_configure)
-        .WillOnce(Return(ModuleOK));
+    EXPECT_CALL(can_transceiver_mock_, __TestCan_configure).Times(1);
     EXPECT_CALL(can_transceiver_mock_, __TestCan_periodic_update)
-        .WillRepeatedly(Return(ModuleOK));
+        .Times(AtLeast(1));
 
     // reset can transceiver list
     is_first_can_transceiver = true;
@@ -126,8 +125,7 @@ class CanTransceiverTransceiveTest : public Test {
 
 TEST_F(CanTransceiverTransceiveTest, PeriodicUpdate) {
   EXPECT_CALL(can_transceiver_mock_, __TestCan_periodic_update)
-      .Times(AtLeast(1))
-      .WillRepeatedly(Return(ModuleOK));
+      .Times(AtLeast(1));
 
   // wait some time for periodic update to happen
   vTaskDelay(20);
@@ -206,7 +204,7 @@ TEST_F(CanTransceiverTransceiveTest, Receive) {
 #endif
   EXPECT_CALL(can_transceiver_mock_,
               __TestCan_receive(_, false, 0x123, 8, ArrayWithSize(data, 8)))
-      .WillOnce(Return(ModuleOK));
+      .Times(1);
 
   // wait some time for periodic receive to happen
   vTaskDelay(20);
@@ -216,7 +214,7 @@ TEST_F(CanTransceiverTransceiveTest, ReceiveHighPriorityMessage) {
   const uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7};
   EXPECT_CALL(can_transceiver_mock_,
               __TestCan_receive_hp(_, false, 0x123, 8, ArrayWithSize(data, 8)))
-      .WillOnce(Return(ModuleOK));
+      .Times(1);
 #if defined(HAL_CAN_MODULE_ENABLED)
   CAN_RxHeaderTypeDef rx_header = {
       .StdId = 0x123,
@@ -266,10 +264,9 @@ class MultiCanTransceiver : public Test {
         .WillRepeatedly(Return(0));
 #endif
     EXPECT_CALL(can_transceiver_mock_, __TestCan_configure)
-        .Times(NUM_CAN_TRANSCIEVER)
-        .WillRepeatedly(Return(ModuleOK));
+        .Times(NUM_CAN_TRANSCIEVER);
     EXPECT_CALL(can_transceiver_mock_, __TestCan_periodic_update)
-        .WillRepeatedly(Return(ModuleOK));
+        .Times(AtLeast(1));
 
     // reset can transceiver list
     is_first_can_transceiver = true;
@@ -378,7 +375,7 @@ TEST_F(MultiCanTransceiver, Receive) {
     EXPECT_CALL(can_transceiver_mock_,
                 __TestCan_receive((CanTransceiver*)&test_can_[i], false, 0x123,
                                   8, ArrayWithSize(data, 8)))
-        .WillOnce(Return(ModuleOK));
+        .Times(1);
   }
 
   // wait some time for periodic receive to happen
@@ -427,7 +424,7 @@ TEST_F(MultiCanTransceiver, ReceiveHighPriorityMessage) {
     EXPECT_CALL(can_transceiver_mock_,
                 __TestCan_receive_hp((CanTransceiver*)&test_can_[i], false,
                                      0x123, 8, ArrayWithSize(data, 8)))
-        .WillOnce(Return(ModuleOK));
+        .Times(1);
   }
 
   // simulate interrupt from rx fifo1

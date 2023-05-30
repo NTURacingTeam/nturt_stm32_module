@@ -121,7 +121,9 @@ void ErrorHandler_task_code(void* const _self) {
         (struct error_callback_cb*)ListIter_next(&error_callback_iter);
     while (error_callback_cb != NULL) {
       if (error_callback_cb->error_code & error_code) {
+        taskEXIT_CRITICAL();
         error_callback_cb->callback(error_callback_cb->arg, error_code);
+        taskENTER_CRITICAL();
       }
 
       error_callback_cb =

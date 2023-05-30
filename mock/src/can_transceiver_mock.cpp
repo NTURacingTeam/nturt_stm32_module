@@ -13,26 +13,25 @@ extern "C" {
 #include "cmock/cmock.h"
 
 /* virtual function redirection ----------------------------------------------*/
-ModuleRet TestCan_configure(TestCan* const self) {
-  return self->super_.vptr_->configure(&self->super_);
+void TestCan_configure(TestCan* const self) {
+  self->super_.vptr_->configure(&self->super_);
 }
 
-ModuleRet TestCan_receive(TestCan* const self, const bool is_extended,
-                          const uint32_t id, const uint8_t dlc,
-                          const uint8_t* const data) {
-  return self->super_.vptr_->receive(&self->super_, is_extended, id, dlc, data);
+void TestCan_receive(TestCan* const self, const bool is_extended,
+                     const uint32_t id, const uint8_t dlc,
+                     const uint8_t* const data) {
+  self->super_.vptr_->receive(&self->super_, is_extended, id, dlc, data);
 }
 
-ModuleRet TestCan_receive_hp(TestCan* const self, const bool is_extended,
-                             const uint32_t id, const uint8_t dlc,
-                             const uint8_t* const data) {
-  return self->super_.vptr_->receive_hp(&self->super_, is_extended, id, dlc,
-                                        data);
+void TestCan_receive_hp(TestCan* const self, const bool is_extended,
+                        const uint32_t id, const uint8_t dlc,
+                        const uint8_t* const data) {
+  self->super_.vptr_->receive_hp(&self->super_, is_extended, id, dlc, data);
 }
 
-ModuleRet TestCan_periodic_update(TestCan* const self,
-                                  const TickType_t current_tick) {
-  return self->super_.vptr_->periodic_update(&self->super_, current_tick);
+void TestCan_periodic_update(TestCan* const self,
+                             const TickType_t current_tick) {
+  self->super_.vptr_->periodic_update(&self->super_, current_tick);
 }
 
 /* constructor ---------------------------------------------------------------*/
@@ -53,14 +52,14 @@ CanTransceiverMock::CanTransceiverMock() {}
 
 CanTransceiverMock::~CanTransceiverMock() {}
 
-CMOCK_MOCK_FUNCTION(CanTransceiverMock, ModuleRet, __TestCan_configure,
+CMOCK_MOCK_FUNCTION(CanTransceiverMock, void, __TestCan_configure,
                     (CanTransceiver*));
 
-CMOCK_MOCK_FUNCTION(CanTransceiverMock, ModuleRet, __TestCan_receive,
+CMOCK_MOCK_FUNCTION(CanTransceiverMock, void, __TestCan_receive,
                     (CanTransceiver*, bool, uint32_t, uint8_t, const uint8_t*));
 
-CMOCK_MOCK_FUNCTION(CanTransceiverMock, ModuleRet, __TestCan_receive_hp,
+CMOCK_MOCK_FUNCTION(CanTransceiverMock, void, __TestCan_receive_hp,
                     (CanTransceiver*, bool, uint32_t, uint8_t, const uint8_t*));
 
-CMOCK_MOCK_FUNCTION(CanTransceiverMock, ModuleRet, __TestCan_periodic_update,
+CMOCK_MOCK_FUNCTION(CanTransceiverMock, void, __TestCan_periodic_update,
                     (CanTransceiver*, TickType_t));

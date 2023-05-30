@@ -18,29 +18,29 @@ typedef struct test_can {
 void TestCan_ctor(TestCan* self, CanHandle* const can_handle);
 
 /* member function -----------------------------------------------------------*/
-ModuleRet TestCan_configure(TestCan* const self);
+void TestCan_configure(TestCan* const self);
 
-ModuleRet TestCan_receive(TestCan* const self, const bool is_extended,
-                          const uint32_t id, const uint8_t dlc,
-                          const uint8_t* const data);
+void TestCan_receive(TestCan* const self, const bool is_extended,
+                     const uint32_t id, const uint8_t dlc,
+                     const uint8_t* const data);
 
-ModuleRet TestCan_receive_hp(TestCan* const self, const bool is_extended,
-                             const uint32_t id, const uint8_t dlc,
-                             const uint8_t* const data);
+void TestCan_receive_hp(TestCan* const self, const bool is_extended,
+                        const uint32_t id, const uint8_t dlc,
+                        const uint8_t* const data);
 
-ModuleRet TestCan_periodic_update(TestCan* const self,
-                                  const TickType_t current_tick);
+void TestCan_periodic_update(TestCan* const self,
+                             const TickType_t current_tick);
 
 /* virtual function declaration ----------------------------------------------*/
-ModuleRet __TestCan_configure(CanTransceiver* self);
+void __TestCan_configure(CanTransceiver* self);
 
-ModuleRet __TestCan_receive(CanTransceiver* self, bool is_extended, uint32_t id,
-                            uint8_t dlc, const uint8_t* data);
+void __TestCan_receive(CanTransceiver* self, bool is_extended, uint32_t id,
+                       uint8_t dlc, const uint8_t* data);
 
-ModuleRet __TestCan_receive_hp(CanTransceiver* self, bool is_extended,
-                               uint32_t id, uint8_t dlc, const uint8_t* data);
+void __TestCan_receive_hp(CanTransceiver* self, bool is_extended, uint32_t id,
+                          uint8_t dlc, const uint8_t* data);
 
-ModuleRet __TestCan_periodic_update(CanTransceiver* self, TickType_t period);
+void __TestCan_periodic_update(CanTransceiver* self, TickType_t period);
 
 /* mock ----------------------------------------------------------------------*/
 class CanTransceiverMock : public CMockMocker<CanTransceiverMock> {
@@ -49,15 +49,15 @@ class CanTransceiverMock : public CMockMocker<CanTransceiverMock> {
 
   ~CanTransceiverMock();
 
-  CMOCK_MOCK_METHOD(ModuleRet, __TestCan_configure, (CanTransceiver*));
+  CMOCK_MOCK_METHOD(void, __TestCan_configure, (CanTransceiver*));
 
-  CMOCK_MOCK_METHOD(ModuleRet, __TestCan_receive,
+  CMOCK_MOCK_METHOD(void, __TestCan_receive,
                     (CanTransceiver*, bool, uint32_t, uint8_t, const uint8_t*));
 
-  CMOCK_MOCK_METHOD(ModuleRet, __TestCan_receive_hp,
+  CMOCK_MOCK_METHOD(void, __TestCan_receive_hp,
                     (CanTransceiver*, bool, uint32_t, uint8_t, const uint8_t*));
 
-  CMOCK_MOCK_METHOD(ModuleRet, __TestCan_periodic_update,
+  CMOCK_MOCK_METHOD(void, __TestCan_periodic_update,
                     (CanTransceiver*, TickType_t));
 };
 

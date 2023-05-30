@@ -134,7 +134,9 @@ void ButtonMonitor_task_code(void* const _self) {
           button_cb->state = current_state;
           button_cb->debounce_count = 0;
           if (button_cb->callback != NULL) {
+            taskENTER_CRITICAL();
             button_cb->callback(button_cb->arg, current_state);
+            taskEXIT_CRITICAL();
           }
         }
       } else if (button_cb->debounce_count != 0) {

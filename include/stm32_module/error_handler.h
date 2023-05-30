@@ -108,7 +108,6 @@ ModuleRet ErrorHandler_start(ErrorHandler* const self);
  * @param[in] arg The argument of the callback function.
  * @param[in] error_code The error code when matched to call the callback.
  * @return ModuleRet Error code.
- * @warning The callback function is executed inside a critical section.
  * @note User is resposible for managing memory for error_callback_cb.
  */
 ModuleRet ErrorHandler_add_error_callback(

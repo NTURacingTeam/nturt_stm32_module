@@ -105,7 +105,6 @@ ModuleRet ButtonMonitor_add_button(ButtonMonitor* const self,
  * @param[in] callback The callback function.
  * @param[in] arg The argument of the callback function.
  * @return ModuleRet Error code.
- * @warning The callback function is executed inside a critical section.
  * @warning When a callback function is already registered for that button, it
  * will be overwritten by the new one.
  */

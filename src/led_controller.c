@@ -160,7 +160,7 @@ void LedController_task_code(void* _self) {
           HAL_GPIO_WritePin(led_cb->led_port, led_cb->led_pin, GPIO_PIN_RESET);
           led_cb->state = LedOff;
         } else {
-          led_cb->ms_to_light -= 10;
+          led_cb->ms_to_light -= LED_CONTROLLER_TASK_PERIOD;
         }
       }
 
