@@ -67,6 +67,7 @@ ModuleRet ErrorHandler_add_error_callback(
 
   return ModuleOK;
 }
+
 ModuleRet ErrorHandler_write_error(ErrorHandler* const self,
                                    const uint32_t error_code,
                                    const uint32_t option) {
