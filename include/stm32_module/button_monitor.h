@@ -23,7 +23,7 @@ extern "C" {
 /* macro ---------------------------------------------------------------------*/
 // parmeter
 #define BUTTON_MONITOR_TASK_PRIORITY TaskPriorityLow
-#define BUTTON_MONITOR_TASK_STACK_SIZE (8 * configMINIMAL_STACK_SIZE)
+#define BUTTON_MONITOR_TASK_STACK_SIZE (4 * configMINIMAL_STACK_SIZE)
 #define BUTTON_MONITOR_TASK_PERIOD 2
 #define BUTTON_MONITOR_DEBOUNCE_TIMES 5
 

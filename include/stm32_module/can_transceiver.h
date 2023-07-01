@@ -27,7 +27,7 @@ extern "C" {
 /* macro ---------------------------------------------------------------------*/
 // parmeter
 #define CAN_TRANSCEIVER_TASK_PRIORITY TaskPriorityHigh
-#define CAN_TRANSCEIVER_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
+#define CAN_TRANSCEIVER_TASK_STACK_SIZE (4 * configMINIMAL_STACK_SIZE)
 #define CAN_TRANSCEIVER_TASK_PERIOD 5
 
 // assert macro
