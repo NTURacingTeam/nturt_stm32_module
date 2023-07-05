@@ -53,12 +53,9 @@ ModuleRet ErrorHandler_add_error_callback(
   module_assert(IS_NOT_NULL(callback));
   module_assert(IS_ERROR_CODE(error_code));
 
-  if (self->super_.state_ != TaskReset) {
-    return ModuleError;
-  }
-
   error_callback_cb->callback = callback;
   error_callback_cb->arg = arg;
+  error_callback_cb->error_code = error_code;
 
   taskENTER_CRITICAL();
   List_push_back(&self->error_callback_list_,

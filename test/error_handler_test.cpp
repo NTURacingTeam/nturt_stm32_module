@@ -41,9 +41,8 @@ class ErrorHandlerStartTest : public Test {
 
 TEST_F(ErrorHandlerStartTest, WriteGetErrorCodeWhileNotStarted) {
   uint32_t error_code = 0x12345678;
-  EXPECT_EQ(
-      ErrorHandler_write_error(&error_handler_, error_code, ERROR_SET),
-      ModuleError);
+  EXPECT_EQ(ErrorHandler_write_error(&error_handler_, error_code, ERROR_SET),
+            ModuleError);
   EXPECT_EQ(ErrorHandler_get_error(&error_handler_, &error_code), ModuleError);
   EXPECT_EQ(error_code, 0x12345678);
 }
@@ -73,19 +72,16 @@ class ErrorHandlerAccessErrorTest : public Test {
 };
 
 TEST_F(ErrorHandlerAccessErrorTest, ErrorHandlerWriteError) {
-  EXPECT_EQ(ErrorHandler_write_error(&error_handler_,
-                                     ERROR_CODE_CAN_TRANSMIT_ERROR |
-                                         ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR,
-                                     ERROR_SET),
+  EXPECT_EQ(ErrorHandler_write_error(
+                &error_handler_, ERROR_CODE_CAN_TX | ERROR_CODE_CAN_RX_CRITICAL,
+                ERROR_SET),
             ModuleOK);
   EXPECT_EQ(ErrorHandler_get_error(&error_handler_, &error_code_), ModuleOK);
-  EXPECT_EQ(error_code_, ERROR_CODE_CAN_TRANSMIT_ERROR |
-                             ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
+  EXPECT_EQ(error_code_, ERROR_CODE_CAN_TX | ERROR_CODE_CAN_RX_CRITICAL);
 
-  ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TRANSMIT_ERROR,
-                           ERROR_CLEAR);
+  ErrorHandler_write_error(&error_handler_, ERROR_CODE_CAN_TX, ERROR_CLEAR);
   ErrorHandler_get_error(&error_handler_, &error_code_);
-  EXPECT_EQ(error_code_, ERROR_CODE_CAN_RECEIVE_TIMEOUT_ERROR);
+  EXPECT_EQ(error_code_, ERROR_CODE_CAN_RX_CRITICAL);
 }
 
 int main(int argc, char** argv) { return mock::run_freertos_test(&argc, argv); }

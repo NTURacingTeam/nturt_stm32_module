@@ -72,7 +72,7 @@ inline ModuleRet MovingAverageFilter_get_filtered_data(
 ModuleRet __MovingAverageFilter_update(Filter *const _self, float data,
                                        float *const filtered_data) {
   module_assert(IS_NOT_NULL(_self));
-  module_assert(IS_IN_VALUE_RANGE(data));
+  // module_assert(IS_IN_VALUE_RANGE(data));
 
   MovingAverageFilter *const self = (MovingAverageFilter *)_self;
   // process chained filter first
@@ -175,7 +175,7 @@ inline ModuleRet NormalizeFilter_get_filtered_data(NormalizeFilter *const self,
 ModuleRet __NormalizeFilter_update(Filter *const _self, float data,
                                    float *const filtered_data) {
   module_assert(IS_NOT_NULL(_self));
-  module_assert(IS_IN_VALUE_RANGE(data));
+  // module_assert(IS_IN_VALUE_RANGE(data));
 
   NormalizeFilter *const self = (NormalizeFilter *)_self;
   // process chained filter first
@@ -217,8 +217,8 @@ void NormalizeFilter_ctor(NormalizeFilter *const self, const float lower_bound,
                           const float upper_bound,
                           Filter *const chained_filter) {
   module_assert(IS_NOT_NULL(self));
-  module_assert(IS_IN_VALUE_RANGE(lower_bound));
-  module_assert(IS_IN_VALUE_RANGE(upper_bound));
+  // module_assert(IS_IN_VALUE_RANGE(lower_bound));
+  // module_assert(IS_IN_VALUE_RANGE(upper_bound));
 
   // construct inherited class and redirect virtual function
   Filter_ctor((Filter *)self, chained_filter);

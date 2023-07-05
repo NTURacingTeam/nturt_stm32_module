@@ -57,7 +57,6 @@ ModuleRet ButtonMonitor_add_button(ButtonMonitor* const self,
 
   button_cb->button_port = button_port;
   button_cb->button_pin = button_pin;
-  button_cb->state = HAL_GPIO_ReadPin(button_port, button_pin);
   button_cb->debounce_count = 0;
   button_cb->callback = NULL;
 
@@ -115,6 +114,7 @@ ModuleRet ButtonMonitor_read_state(ButtonMonitor* const self,
 
 void ButtonMonitor_task_code(void* const _self) {
   ButtonMonitor* const self = (ButtonMonitor*)_self;
+
   TickType_t last_wake = xTaskGetTickCount();
 
   while (1) {
@@ -134,9 +134,9 @@ void ButtonMonitor_task_code(void* const _self) {
           button_cb->state = current_state;
           button_cb->debounce_count = 0;
           if (button_cb->callback != NULL) {
-            taskENTER_CRITICAL();
-            button_cb->callback(button_cb->arg, current_state);
             taskEXIT_CRITICAL();
+            button_cb->callback(button_cb->arg, current_state);
+            taskENTER_CRITICAL();
           }
         }
       } else if (button_cb->debounce_count != 0) {

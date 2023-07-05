@@ -275,6 +275,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* const hcan) {
   portYIELD_FROM_ISR(require_contex_switch);
 }
 #elif defined(HAL_FDCAN_MODULE_ENABLED)
+#include "main.h"
 void HAL_FDCAN_RxFifo1Callback(FDCAN_HandleTypeDef* const hfdcan,
                                uint32_t const RxFifo1ITs) {
   if ((RxFifo1ITs & FDCAN_IT_RX_FIFO1_NEW_MESSAGE) != RESET) {
