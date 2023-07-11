@@ -58,6 +58,8 @@ ModuleRet LedController_add_led(LedController* const self,
     return ModuleError;
   }
 
+  HAL_GPIO_WritePin(led_port, led_pin, GPIO_PIN_RESET);
+
   led_cb->led_port = led_port;
   led_cb->led_pin = led_pin;
   led_cb->ms_to_light = 0;
